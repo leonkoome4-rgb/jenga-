@@ -14,19 +14,19 @@ const highlights = [
     title: 'Showcase your work',
     copy: 'Turn every project into a clean, shareable page — proof of what you can actually build, not just a line on a CV.',
     tone: 'orange',
-    imageUrl: 'https://loremflickr.com/900/700/student,laptop?lock=201',
+    imageUrl: 'https://cdn.pixabay.com/photo/2015/07/17/22/43/student-849824_640.jpg',
   },
   {
     title: 'Get discovered',
     copy: 'Employers, mentors, and future teammates browse the project bank looking for exactly the kind of work you’ve already shipped.',
     tone: 'blue',
-    imageUrl: 'https://loremflickr.com/900/700/presentation,team?lock=202',
+    imageUrl: 'https://cdn.pixabay.com/photo/2019/03/27/09/43/team-4084637_640.jpg',
   },
   {
     title: 'Compete & climb',
     copy: 'Likes decide the leaderboard. Beat your cohort, top the charts, and see your build featured on Tawi.',
     tone: 'orange',
-    imageUrl: 'https://loremflickr.com/900/700/trophy,achievement?lock=203',
+    imageUrl: 'https://cdn.pixabay.com/photo/2019/04/21/23/15/trophy-4145177_640.png',
   },
 ]
 

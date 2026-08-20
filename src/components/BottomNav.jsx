@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { Home, Search, Plus, Inbox, User } from 'lucide-react'
+import { Home, Search, Trophy, Plus, Inbox, User } from 'lucide-react'
 import { selectCurrentUser } from '../features/user/userSlice.js'
 
 export default function BottomNav() {
@@ -10,6 +10,7 @@ export default function BottomNav() {
   const leadingItems = [
     { label: 'Home', to: '/discover', icon: Home, match: (p) => p === '/discover' },
     { label: 'Search', to: '/explore', icon: Search, match: (p) => p.startsWith('/explore') },
+    { label: 'Leaderboard', to: '/top', icon: Trophy, match: (p) => p.startsWith('/top') },
   ]
   const trailingItems = [
     { label: 'Inbox', to: '/inbox', icon: Inbox, match: (p) => p.startsWith('/inbox') },
@@ -28,7 +29,7 @@ export default function BottomNav() {
         key={item.label}
         to={item.to}
         aria-label={item.label}
-        className={`flex flex-col items-center gap-1 rounded-lg px-4 py-1.5 ${
+        className={`flex flex-col items-center gap-1 rounded-lg px-2.5 py-1.5 ${
           isActive ? 'text-orange' : 'text-navy'
         }`}
       >
@@ -39,7 +40,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-border bg-white px-4 pt-2.5 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-around border-t border-border bg-white px-2 pt-2.5 lg:hidden"
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 10px)' }}
     >
       {leadingItems.map(renderItem)}
