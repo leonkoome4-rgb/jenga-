@@ -39,10 +39,10 @@ export default function Home() {
 
   return (
     <div className="relative h-dvh lg:mx-auto lg:max-w-[420px] lg:py-4">
-      <FeedTopTabs active={tab} onChange={setTab} />
+      <FeedTopTabs active={tab} onChange={setTab} theme={tab === 'home' ? 'light' : 'dark'} />
 
       {tab === 'home' ? (
-        <HomePanel onOpenFeed={() => setTab('forYou')} />
+        <HomePanel />
       ) : projects.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center gap-4 bg-navy px-8 text-center lg:rounded-2xl">
           <Compass size={24} strokeWidth={1.75} className="text-white/70" />

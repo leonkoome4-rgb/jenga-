@@ -6,8 +6,9 @@ const tabs = [
   { id: 'explore', label: 'Explore' },
 ]
 
-export default function FeedTopTabs({ active = 'forYou', onChange }) {
+export default function FeedTopTabs({ active = 'forYou', onChange, theme = 'dark' }) {
   const navigate = useNavigate()
+  const isDark = theme === 'dark'
 
   const handleClick = (id) => {
     if (id === 'explore') {
@@ -29,8 +30,14 @@ export default function FeedTopTabs({ active = 'forYou', onChange }) {
             className="pointer-events-auto flex flex-col items-center gap-1.5"
           >
             <span
-              className={`text-scrim text-[15px] font-semibold ${
-                isActive ? 'text-white' : 'text-white/70'
+              className={`text-[15px] font-semibold ${isDark ? 'text-scrim' : ''} ${
+                isActive
+                  ? isDark
+                    ? 'text-white'
+                    : 'text-navy'
+                  : isDark
+                    ? 'text-white/70'
+                    : 'text-navy/50'
               }`}
             >
               {tab.label}
