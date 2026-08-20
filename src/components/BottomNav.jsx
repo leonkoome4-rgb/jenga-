@@ -8,7 +8,7 @@ export default function BottomNav() {
   const currentUser = useSelector(selectCurrentUser)
 
   const leadingItems = [
-    { label: 'Home', to: '/discover', icon: Home, match: (p) => p === '/discover' },
+    { label: 'Home', to: '/', icon: Home, match: (p) => p === '/' },
     { label: 'Search', to: '/explore', icon: Search, match: (p) => p.startsWith('/explore') },
     { label: 'Leaderboard', to: '/top', icon: Trophy, match: (p) => p.startsWith('/top') },
   ]

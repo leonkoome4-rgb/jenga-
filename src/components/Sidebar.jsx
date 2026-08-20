@@ -14,7 +14,7 @@ export default function Sidebar() {
   const isAdmin = useSelector(selectIsAdmin)
 
   const navItems = [
-    { label: 'Home', to: '/discover', icon: Home, match: (p) => p === '/discover' },
+    { label: 'Home', to: '/', icon: Home, match: (p) => p === '/' },
     { label: 'Explore', to: '/explore', icon: Search, match: (p) => p.startsWith('/explore') },
     { label: 'Leaderboard', to: '/top', icon: Trophy, match: (p) => p.startsWith('/top') },
     { label: 'Inbox', to: '/inbox', icon: Inbox, match: (p) => p.startsWith('/inbox') },
