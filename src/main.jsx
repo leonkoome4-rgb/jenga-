@@ -2,9 +2,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
+import { inject } from '@vercel/analytics'
 import './index.css'
 import { store } from './app/store.js'
 import App from './App.jsx'
+
+inject()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
