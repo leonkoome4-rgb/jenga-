@@ -13,7 +13,7 @@ export const projects = [
     description: 'A visual roadmap builder that helps students plan their learning path term by term.',
     fullDescription:
       'Pathway lets students map out their entire program as an interactive timeline, mixing required courses, electives, and personal projects. It surfaces prerequisite conflicts automatically and suggests a lighter or heavier course load based on how a term is trending. Built over six weeks as a way to replace the spreadsheet most of the cohort was already using.',
-    imageUrl: `https://loremflickr.com/900/600/coding,laptop?lock=101`,
+    imageUrl: `https://cdn.pixabay.com/photo/2021/08/04/13/06/software-developer-6521720_1280.jpg`,
     videoUrl: 'https://cdn.pixabay.com/video/2024/06/06/215500_large.mp4',
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -33,7 +33,7 @@ export const projects = [
     description: 'A native Android app for splitting group expenses on trips without the group chat chaos.',
     fullDescription:
       'Riftline tracks who paid for what across a trip and settles balances with the fewest possible transactions. It works offline and syncs once everyone is back on wifi. The hardest part was the settlement algorithm — minimizing the number of payments needed to zero everyone out turned into a small graph problem.',
-    imageUrl: `https://loremflickr.com/900/600/smartphone,mobile?lock=102`,
+    imageUrl: `https://cdn.pixabay.com/photo/2019/11/23/11/33/mobile-phone-4646854_640.jpg`,
     videoUrl: null,
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -53,7 +53,7 @@ export const projects = [
     description: 'A component library and theming tool for teams who want consistency without a design system team.',
     fullDescription:
       'Foundry generates a small, opinionated component library from a handful of design tokens. Point it at a color, a type scale, and a spacing unit, and it produces a themed set of buttons, inputs, and cards ready to drop into a React project. Started as a way to stop rebuilding the same button styles for every hackathon project.',
-    imageUrl: `https://loremflickr.com/900/600/programming,software?lock=103`,
+    imageUrl: `https://cdn.pixabay.com/photo/2016/11/19/22/52/coding-1841550_640.jpg`,
     videoUrl: 'https://cdn.pixabay.com/video/2024/03/12/203986-923133871_medium.mp4',
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -73,7 +73,7 @@ export const projects = [
     description: 'A lightweight pipeline for cleaning and visualizing sensor data from student hardware projects.',
     fullDescription:
       'Signalgrid ingests raw CSV exports from Arduino and Raspberry Pi projects, cleans obvious sensor noise, and renders a live dashboard. It grew out of a robotics elective where half the class was hand-cleaning data in spreadsheets before every demo day.',
-    imageUrl: `https://loremflickr.com/900/600/data,analytics?lock=104`,
+    imageUrl: `https://cdn.pixabay.com/photo/2016/07/13/17/39/big-data-1515036_640.jpg`,
     videoUrl: null,
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -93,7 +93,7 @@ export const projects = [
     description: 'A focus timer that adapts session length based on how long you actually stay in flow.',
     fullDescription:
       'Loop starts as a standard Pomodoro timer but adjusts future session lengths based on your own focus history — if you consistently blow past 25 minutes without a break, it nudges your default up. All the tracking happens locally, nothing leaves the device.',
-    imageUrl: `https://loremflickr.com/900/600/developer,screen?lock=105`,
+    imageUrl: `https://cdn.pixabay.com/photo/2016/11/30/20/58/programming-1873854_640.png`,
     videoUrl: 'https://cdn.pixabay.com/video/2023/06/23/168485-839220701_medium.mp4',
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -113,7 +113,7 @@ export const projects = [
     description: 'A budgeting app for freelancers that separates taxable income from take-home pay automatically.',
     fullDescription:
       'Ledgerline reads in freelance income line by line and estimates what should be set aside for taxes based on a configurable rate, then shows a clear take-home number. Built after watching three cohort-mates get surprised by their first freelance tax bill.',
-    imageUrl: `https://loremflickr.com/900/600/computer,code?lock=106`,
+    imageUrl: `https://cdn.pixabay.com/photo/2016/11/23/14/45/coding-1853305_640.jpg`,
     videoUrl: null,
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -133,7 +133,7 @@ export const projects = [
     description: 'A campus events app that surfaces what is happening within walking distance, right now.',
     fullDescription:
       'Nearby pulls together club events, study sessions, and informal meetups into a single feed filtered by walking distance and time. The goal was to fix the problem of good events getting buried in six different group chats.',
-    imageUrl: `https://loremflickr.com/900/600/mobileapp,phone?lock=107`,
+    imageUrl: `https://cdn.pixabay.com/photo/2024/02/24/19/00/phone-8594571_640.jpg`,
     videoUrl: null,
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -153,7 +153,7 @@ export const projects = [
     description: 'An accessibility checker that rewrites a color palette to pass contrast requirements automatically.',
     fullDescription:
       'Palette takes an existing brand palette and generates the smallest possible adjustments needed to meet WCAG AA contrast, so a design stays recognizable while becoming usable. It started as a plugin for a UI/UX elective final project.',
-    imageUrl: `https://loremflickr.com/900/600/robot,artificialintelligence?lock=108`,
+    imageUrl: `https://cdn.pixabay.com/photo/2016/11/04/11/46/robot-1797548_640.png`,
     videoUrl: 'https://cdn.pixabay.com/video/2023/07/24/173104-848555587_medium.mp4',
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -173,7 +173,7 @@ export const projects = [
     description: 'A shared calendar for study groups that finds overlapping free time without the back-and-forth.',
     fullDescription:
       'Cadence connects to everyone’s existing calendar and highlights the windows where a whole study group is actually free, ranked by how consistent that slot has been week over week. Fewer polls, fewer "does 4pm work" threads.',
-    imageUrl: `https://loremflickr.com/900/600/coding,laptop?lock=109`,
+    imageUrl: `https://cdn.pixabay.com/photo/2016/11/19/15/32/laptop-1839876_640.jpg`,
     videoUrl: null,
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -193,7 +193,7 @@ export const projects = [
     description: 'A project brief generator that turns a rough idea into a scoped, buildable spec.',
     fullDescription:
       'Groundwork takes a one-paragraph project idea and returns a scoped brief: core features, stretch features, and a rough tech stack recommendation. Built to help first-term students go from "I want to build something" to an actual weekend plan.',
-    imageUrl: `https://loremflickr.com/900/600/bigdata,computer?lock=110`,
+    imageUrl: `https://cdn.pixabay.com/photo/2017/01/22/23/13/big-data-2001190_640.jpg`,
     videoUrl: null,
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -213,7 +213,7 @@ export const projects = [
     description: 'A minimal habit tracker that only shows you the one habit that needs attention today.',
     fullDescription:
       'Overlook deliberately shows one habit at a time instead of a full dashboard, picked by how close it is to breaking a streak. The bet was that less visible surface area means less overwhelm and better follow-through.',
-    imageUrl: `https://loremflickr.com/900/600/programming,software?lock=111`,
+    imageUrl: `https://cdn.pixabay.com/photo/2015/12/04/14/05/code-1076536_640.jpg`,
     videoUrl: null,
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
@@ -233,7 +233,7 @@ export const projects = [
     description: 'A local-first note-taking app built for pairing text notes with hand-drawn diagrams.',
     fullDescription:
       'Substrate keeps typed notes and freehand sketches on the same canvas, stored entirely on-device with optional export. It grew out of frustration with switching between a notes app and a separate whiteboard tool during study sessions.',
-    imageUrl: `https://loremflickr.com/900/600/developer,screen?lock=112`,
+    imageUrl: `https://cdn.pixabay.com/photo/2016/03/27/18/54/technology-1283624_640.jpg`,
     videoUrl: null,
     githubLink: PLACEHOLDER_LINK,
     liveLink: PLACEHOLDER_LINK,
