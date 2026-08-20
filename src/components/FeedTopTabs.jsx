@@ -1,16 +1,19 @@
 import { useNavigate } from 'react-router-dom'
 
 const tabs = [
+  { id: 'home', label: 'Home' },
   { id: 'forYou', label: 'For You' },
   { id: 'explore', label: 'Explore' },
 ]
 
-export default function FeedTopTabs({ active = 'forYou' }) {
+export default function FeedTopTabs({ active = 'forYou', onChange }) {
   const navigate = useNavigate()
 
   const handleClick = (id) => {
     if (id === 'explore') {
       navigate('/explore')
+    } else {
+      onChange?.(id)
     }
   }
 
