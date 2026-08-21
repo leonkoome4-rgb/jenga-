@@ -14,7 +14,7 @@ import AdminCohorts from './pages/AdminCohorts.jsx'
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<landing />} />
 
       <Route element={<AppLayout />}>
         <Route path="/discover" element={<Home />} />
