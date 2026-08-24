@@ -2,6 +2,11 @@ import os
 import requests
 
 TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+# Cloudflare publishes these non-production test secrets. Handling them locally
+# avoids a network dependency during development and tests; real production
+# secrets always use Cloudflare's server-side verification endpoint below.
+TURNSTILE_TEST_PASS_SECRET = "1x0000000000000000000000000000000AA"
+TURNSTILE_TEST_BLOCK_SECRET = "2x0000000000000000000000000000000AA"
 
 _FRIENDLY_ERRORS = {
     "missing-input-response": "Please complete the human verification.",
@@ -29,6 +34,11 @@ def verify_turnstile(token, remote_ip=None):
 
     if not token:
         return False, _FRIENDLY_ERRORS["missing-input-response"]
+
+    if secret_key == TURNSTILE_TEST_PASS_SECRET:
+        return True, None
+    if secret_key == TURNSTILE_TEST_BLOCK_SECRET:
+        return False, _FRIENDLY_ERRORS["invalid-input-response"]
 
     payload = {"secret": secret_key, "response": token}
     if remote_ip:
