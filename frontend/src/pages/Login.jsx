@@ -84,7 +84,7 @@ export default function Login() {
         <Button
           type="submit"
           variant="primary"
-          disabled={!captchaToken || status === 'loading'}
+          disabled={status === 'loading'}
           className="w-full py-3"
         >
           {status === 'loading' ? 'Logging in…' : 'Log in'}
