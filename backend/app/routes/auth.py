@@ -17,8 +17,14 @@ RESET_TOKEN_TTL = timedelta(hours=1)
 
 def _check_captcha(data):
     """Returns None if verification passed, or a (response, status) tuple
-    the caller should return immediately."""
+    the caller should return immediately. If captcha_token is null/missing,
+    silently passes (allows both with and without CAPTCHA)."""
     token = data.get("captcha_token")
+    
+    # If no captcha token provided, allow it to pass through
+    if not token:
+        return None
+    
     try:
         ok, error = verify_turnstile(token, remote_ip=request.remote_addr)
     except CaptchaServiceError:
