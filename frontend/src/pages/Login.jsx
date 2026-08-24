@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { AlertCircle } from 'lucide-react'
 import AuthLayout from '../layouts/AuthLayout.jsx'
 import Button from '../components/Button.jsx'
-import TurnstileWidget from '../components/TurnstileWidget.jsx'
 import { loginUser, selectAuthStatus, selectAuthError, authErrorCleared } from '../features/auth/authSlice.js'
 
 const inputClasses =
@@ -18,23 +17,15 @@ export default function Login() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [captchaToken, setCaptchaToken] = useState(null)
-  const [captchaKey, setCaptchaKey] = useState(0)
-
-  // Check if we have a valid CAPTCHA site key
-  const hasCaptchaKey = import.meta.env.VITE_TURNSTILE_SITE_KEY && !import.meta.env.VITE_TURNSTILE_SITE_KEY.startsWith('1x00000000')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     dispatch(authErrorCleared())
 
-    const result = await dispatch(loginUser({ email, password, captcha_token: captchaToken }))
+    const result = await dispatch(loginUser({ email, password }))
 
     if (loginUser.fulfilled.match(result)) {
       navigate('/ai-hub')
-    } else {
-      setCaptchaToken(null)
-      setCaptchaKey((k) => k + 1)
     }
   }
 
@@ -76,15 +67,6 @@ export default function Login() {
             placeholder="Your password"
           />
         </div>
-
-        {hasCaptchaKey && (
-          <TurnstileWidget
-            key={captchaKey}
-            onVerify={setCaptchaToken}
-            onExpire={() => setCaptchaToken(null)}
-            onError={() => setCaptchaToken(null)}
-          />
-        )}
 
         <Button
           type="submit"
