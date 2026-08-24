@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { AlertCircle, Check } from 'lucide-react'
 import AuthLayout from '../layouts/AuthLayout.jsx'
 import Button from '../components/Button.jsx'
-import TurnstileWidget from '../components/TurnstileWidget.jsx'
 import { api } from '../api/client.js'
 
 const inputClasses =
@@ -11,8 +10,6 @@ const inputClasses =
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
-  const [captchaToken, setCaptchaToken] = useState(null)
-  const [captchaKey, setCaptchaKey] = useState(0)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
   const [devResetToken, setDevResetToken] = useState(null)
@@ -25,15 +22,12 @@ export default function ForgotPassword() {
     try {
       const data = await api.post('/api/auth/forgot-password', {
         email,
-        captcha_token: captchaToken,
       })
       setStatus('sent')
       setDevResetToken(data.reset_token || null)
     } catch (err) {
       setStatus('idle')
       setError(err.data?.error || err.message)
-      setCaptchaToken(null)
-      setCaptchaKey((k) => k + 1)
     }
   }
 
@@ -97,17 +91,10 @@ export default function ForgotPassword() {
           />
         </div>
 
-        <TurnstileWidget
-          key={captchaKey}
-          onVerify={setCaptchaToken}
-          onExpire={() => setCaptchaToken(null)}
-          onError={() => setCaptchaToken(null)}
-        />
-
         <Button
           type="submit"
           variant="primary"
-          disabled={!captchaToken || status === 'loading'}
+          disabled={status === 'loading'}
           className="w-full py-3"
         >
           {status === 'loading' ? 'Sending…' : 'Send reset link'}
