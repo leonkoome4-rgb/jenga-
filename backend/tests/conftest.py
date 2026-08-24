@@ -33,12 +33,30 @@ def db(app):
     return _db
 
 
+# Cloudflare's published "always passes" test token -- valid alongside the
+# TURNSTILE_SECRET_KEY test key set in .env, works with any string value.
+CAPTCHA_TOKEN = "test-turnstile-token"
+
+
 def register_user(client, name="Test User", email="test@example.com", password="password123"):
     response = client.post(
         "/api/auth/register",
-        json={"name": name, "email": email, "password": password},
+        json={
+            "name": name,
+            "email": email,
+            "password": password,
+            "captcha_token": CAPTCHA_TOKEN,
+        },
     )
     return response.get_json()
+
+
+def login_user(client, email, password="password123"):
+    response = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password, "captcha_token": CAPTCHA_TOKEN},
+    )
+    return response
 
 
 def auth_header(token):

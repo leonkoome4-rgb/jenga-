@@ -2,14 +2,14 @@
 
 *Where your work branches out.*
 
-Tawi is a permanent project bank and creator network for Moringa School students, so project work doesn't disappear after a cohort ends. Students showcase projects, discover others' work, connect to collaborate, and can optionally support the platform via M-Pesa ("Changia"). Admins manage cohorts and moderate content after the fact.
+Tawi is a permanent project bank and creator network for Moringa School students, so project work doesn't disappear after a cohort ends. Students showcase projects, discover others' work, and connect to collaborate. Admins manage cohorts and moderate content after the fact.
 
 Full-stack: Flask + PostgreSQL backend, React + Redux Toolkit frontend.
 
 ## Structure
 
 ```
-backend/    Flask API — models, JWT auth, ownership-enforced routes, AI Hub, M-Pesa
+backend/    Flask API — models, JWT auth, ownership-enforced routes, AI Hub, CAPTCHA
 frontend/   React + Redux Toolkit + Tailwind
 ```
 
@@ -18,12 +18,17 @@ frontend/   React + Redux Toolkit + Tailwind
 ```bash
 cd backend
 python3 -m venv venv && venv/bin/pip install -r requirements.txt
-cp .env.example .env   # fill in DATABASE_URL, JWT_SECRET_KEY, AI_API_KEY, etc.
+cp .env.example .env   # fill in DATABASE_URL, JWT_SECRET_KEY, AI_API_KEY, TURNSTILE_*, etc.
 createdb tawi_dev
 FLASK_APP=run.py venv/bin/flask db upgrade
 venv/bin/python seed.py       # seeds cohorts, categories, tech tags
-venv/bin/python run.py        # http://localhost:5000
+venv/bin/python run.py        # http://127.0.0.1:5000
 ```
+
+> On macOS, use `127.0.0.1:5000` rather than `localhost:5000` — the built-in
+> AirPlay Receiver also listens on port 5000, and `localhost` can resolve to
+> its IPv6 listener first, silently intercepting the request before it
+> reaches Flask.
 
 Run tests (spins up its own `tawi_test` database):
 
@@ -42,19 +47,25 @@ project regardless of ownership.
 all sharing one `call_ai()` core in `app/services/ai_service.py`, via Groq's
 OpenAI-compatible API. Every route requires a valid JWT and logs to `AI_HISTORY`.
 
-### Changia (M-Pesa)
+### CAPTCHA (Cloudflare Turnstile)
 
-`app/services/mpesa_service.py` is a complete Daraja (Lipa na M-Pesa Online / STK
-Push) implementation, but needs real Safaricom sandbox credentials in `.env`
-(`MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_PASSKEY`) to actually run —
-those aren't included. `MPESA_CALLBACK_URL` needs to be a publicly reachable URL
-(e.g. via ngrok in dev) since Safaricom calls it directly.
+Registration, login, and password reset are all gated by Cloudflare Turnstile,
+verified server-side in `app/services/captcha_service.py` against Cloudflare's
+`siteverify` API — the frontend widget alone proves nothing; a request without
+a valid `captcha_token` is rejected by Flask before credentials are even
+checked. `.env` ships with Cloudflare's published *always-passes* test keypair
+(`TURNSTILE_SITE_KEY=1x00000000000000000000AA` /
+`TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA`), fine for local
+dev. Get real keys at https://dash.cloudflare.com/?to=/:account/turnstile for
+production — the secret key must only ever live in the backend `.env`, never
+in frontend code or `VITE_`-prefixed vars.
 
 ## Frontend
 
 ```bash
 cd frontend
 npm install
+cp .env.example .env   # VITE_API_URL, VITE_TURNSTILE_SITE_KEY
 npm run dev   # http://localhost:5173
 ```
 
@@ -62,12 +73,14 @@ Deployed via Vercel with root directory set to `frontend/`.
 
 ## Screens
 
+- **Landing** (`/`) — marketing page with login / get started
+- **Login / Register** (`/login`, `/register`) — JWT auth, CAPTCHA-protected
+- **Forgot / reset password** (`/forgot-password`, `/reset-password`) — CAPTCHA-protected
 - **Feed** (`/discover`) — full-screen, swipeable "For You" feed of projects
 - **Explore** (`/explore`) — search and filter by category or cohort
 - **Leaderboard** (`/top`) — top-liked projects, filterable to your own cohort
 - **Project detail** (`/projects/:id`) — full write-up, like, tip, and "Connect"
 - **Profile** (`/profile`, `/creators/:id`) — a student's builds, stats, and skills
 - **Add project** (`/add-project`) — publish a build with image/video, tech stack, team
-- **AI Hub** — categorize, describe, tag, skill-gap, team-match, README, debug
-- **Changia** — support the platform via M-Pesa
+- **AI Hub** (`/ai-hub`) — categorize, describe, tag, skill-gap, team-match, README, debug
 - **Admin** (`/admin`, `/admin/cohorts`) — manage projects and cohorts

@@ -53,3 +53,32 @@
     text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.35);
   }
 }
+
+@keyframes mascot-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(-2deg); }
+}
+
+@keyframes mascot-wag {
+  0%, 100% { transform: rotate(-16deg); }
+  50% { transform: rotate(18deg); }
+}
+
+@keyframes mascot-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+.mascot-idle {
+  animation: mascot-bounce 2.6s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+.mascot-tail {
+  animation: mascot-wag 0.7s ease-in-out infinite;
+}
+
+.mascot-pop {
+  animation: mascot-pop 0.4s ease-out;
+}

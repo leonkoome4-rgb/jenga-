@@ -3,6 +3,9 @@ import { useSelector } from 'react-redux'
 import { Home, Search, Trophy, Plus, Inbox, User } from 'lucide-react'
 import { selectCurrentUser } from '../features/user/userSlice.js'
 
+// Bottom nav is capped at 5 destinations + 1 action, per Material/Apple HIG
+// guidance -- AI Hub moved to the Sidebar (desktop) and the assistant panel
+// (mobile), since the pet mascot is now a more discoverable entry point.
 export default function BottomNav() {
   const location = useLocation()
   const currentUser = useSelector(selectCurrentUser)

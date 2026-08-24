@@ -13,12 +13,6 @@ class Config:
     AI_MODEL = os.environ.get("AI_MODEL", "openai/gpt-oss-120b")
     AI_BASE_URL = os.environ.get("AI_BASE_URL", "https://api.groq.com/openai/v1")
 
-    MPESA_CONSUMER_KEY = os.environ.get("MPESA_CONSUMER_KEY")
-    MPESA_CONSUMER_SECRET = os.environ.get("MPESA_CONSUMER_SECRET")
-    MPESA_SHORTCODE = os.environ.get("MPESA_SHORTCODE")
-    MPESA_PASSKEY = os.environ.get("MPESA_PASSKEY")
-    MPESA_CALLBACK_URL = os.environ.get("MPESA_CALLBACK_URL")
-
 
 class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get(

@@ -19,7 +19,7 @@ class AIServiceError(Exception):
     pass
 
 
-def call_ai(system_prompt, user_prompt):
+def call_ai_messages(messages):
     if not os.environ.get("AI_API_KEY"):
         raise AIServiceError("AI is not configured on this server")
 
@@ -27,10 +27,7 @@ def call_ai(system_prompt, user_prompt):
     try:
         response = client.chat.completions.create(
             model=os.environ.get("AI_MODEL", "openai/gpt-oss-120b"),
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
+            messages=messages,
             response_format={"type": "json_object"},
         )
     except Exception as exc:  # network / API failure
@@ -41,3 +38,12 @@ def call_ai(system_prompt, user_prompt):
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError) as exc:
         raise AIServiceError("AI returned a response that wasn't valid JSON") from exc
+
+
+def call_ai(system_prompt, user_prompt):
+    return call_ai_messages(
+        [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+    )

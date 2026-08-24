@@ -2,9 +2,25 @@ from flask import Blueprint, request, jsonify
 from app.extensions import db
 from app.models import Project, User, AIHistory
 from app.utils.decorators import get_current_user
-from app.services.ai_service import call_ai, AIServiceError
+from app.services.ai_service import call_ai, call_ai_messages, AIServiceError
 
 bp = Blueprint("ai", __name__, url_prefix="/api/ai")
+
+# Destinations the chat assistant is allowed to send users to. Whatever the
+# model returns for "navigate_to" is checked against this whitelist server
+# side -- the model's opinion of a valid route is never trusted on its own.
+ASSISTANT_ROUTES = {
+    "/": "Landing page -- marketing home, with login / get started",
+    "/discover": "The For You feed -- full-screen swipeable project videos",
+    "/explore": "Explore -- search and filter projects by category or cohort",
+    "/top": "Leaderboard -- top-liked projects",
+    "/inbox": "Inbox -- connection requests and messages",
+    "/ai-hub": "AI Hub -- categorize, describe, tag, skill-gap, team-match, README, debug tools",
+    "/profile": "The signed-in user's own profile",
+    "/add-project": "Form to publish a new project",
+    "/login": "Log in page",
+    "/register": "Create account page",
+}
 
 
 def _log(user_id, feature, input_data, output_data):
@@ -259,3 +275,61 @@ def debug_assistant():
         f"Code:\n{data['code']}"
     )
     return _run("debug", system_prompt, user_prompt, data, current_user)
+
+
+@bp.post("/chat")
+def chat():
+    current_user = get_current_user()
+    data = request.get_json(silent=True) or {}
+    message = (data.get("message") or "").strip()
+    if not message:
+        return jsonify({"success": False, "error": "message is required"}), 400
+
+    history = data.get("history") or []
+    if not isinstance(history, list):
+        history = []
+    # Keep the prompt small -- only the last few turns are needed for context.
+    history = [
+        {"role": m.get("role"), "content": m.get("content")}
+        for m in history[-8:]
+        if m.get("role") in ("user", "assistant") and m.get("content")
+    ]
+
+    routes_list = "\n".join(f"- {path} :: {desc}" for path, desc in ASSISTANT_ROUTES.items())
+    projects = sorted({m.project.name for m in current_user.project_memberships if m.project})
+    system_prompt = (
+        "You are the in-app assistant for Tawi (Moringa x Tawi), a project bank and creator "
+        "network for Moringa School students. Be brief, warm, and helpful. You can hold a "
+        "normal conversation about anything, and you can also move the user around the app "
+        "when they ask to go somewhere.\n\n"
+        "Pages you can send the user to (use the exact path):\n"
+        f"{routes_list}\n\n"
+        'Respond with a JSON object with exactly two keys: "reply" (a short plain-text answer '
+        'or message to show the user) and "navigate_to" (one of the exact paths above if the '
+        "user asked to go/see/open/take-me-to that page, otherwise null). Only set navigate_to "
+        "when the user's message is actually a request to go somewhere -- not for general "
+        "questions that merely mention a page.\n\n"
+        "The signed-in user's account:\n"
+        f"- Name: {current_user.name}\n"
+        f"- Role: {current_user.role}\n"
+        f"- Cohort: {current_user.cohort.name if current_user.cohort else 'not set'}\n"
+        f"- Bio: {current_user.bio or 'not set'}\n"
+        f"- GitHub: {current_user.github_url or 'not set'}\n"
+        f"- Projects: {', '.join(projects) or 'none published yet'}\n"
+        "Use this to personalize answers when relevant (e.g. questions about 'my projects' "
+        "or 'my profile'). Don't recite it unprompted."
+    )
+
+    messages = [{"role": "system", "content": system_prompt}, *history, {"role": "user", "content": message}]
+
+    try:
+        output = call_ai_messages(messages)
+    except AIServiceError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 502
+
+    navigate_to = output.get("navigate_to")
+    if navigate_to not in ASSISTANT_ROUTES:
+        navigate_to = None
+
+    reply = output.get("reply") or "..."
+    return jsonify({"success": True, "result": {"reply": reply, "navigate_to": navigate_to}})

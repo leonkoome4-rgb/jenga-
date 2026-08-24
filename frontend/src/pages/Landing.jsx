@@ -1,10 +1,14 @@
 import { Link } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { Sparkles } from 'lucide-react'
 import Logo from '../components/Logo.jsx'
 import Button from '../components/Button.jsx'
 import MarketingContent from '../components/MarketingContent.jsx'
+import { selectIsAuthenticated } from '../features/auth/authSlice.js'
 
 export default function Landing() {
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+
   return (
     <div className="min-h-screen bg-bg">
       <div className="bg-navy px-4 py-2 text-center text-[13px] text-white">
@@ -33,12 +37,20 @@ export default function Landing() {
             </a>
           </nav>
           <div className="flex items-center gap-3">
-            <Button to="/discover" variant="secondary" className="hidden px-4 py-2 sm:inline-flex">
-              Log in
-            </Button>
-            <Button to="/discover" variant="primary" className="px-4 py-2">
-              Get started
-            </Button>
+            {isAuthenticated ? (
+              <Button to="/discover" variant="primary" className="px-4 py-2">
+                Go to feed
+              </Button>
+            ) : (
+              <>
+                <Button to="/login" variant="secondary" className="hidden px-4 py-2 sm:inline-flex">
+                  Log in
+                </Button>
+                <Button to="/register" variant="primary" className="px-4 py-2">
+                  Get started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>

@@ -6,8 +6,8 @@ from app.models.models import (
     Project,
     ProjectMember,
     Connection,
-    Donation,
     AIHistory,
+    PasswordResetToken,
 )
 
 __all__ = [
@@ -18,6 +18,6 @@ __all__ = [
     "Project",
     "ProjectMember",
     "Connection",
-    "Donation",
     "AIHistory",
+    "PasswordResetToken",
 ]

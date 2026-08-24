@@ -1,23 +1,26 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Home, Search, Trophy, Inbox, User, Plus, ShieldCheck } from 'lucide-react'
+import { Home, Search, Trophy, Inbox, User, Plus, ShieldCheck, Sparkles, LogOut } from 'lucide-react'
 import Logo from './Logo.jsx'
-import { categories } from '../data/categories.js'
-import { categoryChanged } from '../features/filters/filtersSlice.js'
-import { selectCurrentUser, selectIsAdmin } from '../features/user/userSlice.js'
+import { selectCurrentUser } from '../features/user/userSlice.js'
+import { selectIsAuthenticated, selectAuthUser, loggedOut } from '../features/auth/authSlice.js'
 
 export default function Sidebar() {
   const dispatch = useDispatch()
-  const navigate = useNavigate()
   const location = useLocation()
   const currentUser = useSelector(selectCurrentUser)
-  const isAdmin = useSelector(selectIsAdmin)
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+  const authUser = useSelector(selectAuthUser)
+  // Admin visibility must come from the real backend role, never the demo
+  // mock user (which is hardcoded as an admin for browsing purposes).
+  const isAdmin = authUser?.role === 'admin'
 
   const navItems = [
     { label: 'Home', to: '/', icon: Home, match: (p) => p === '/' },
     { label: 'Explore', to: '/explore', icon: Search, match: (p) => p.startsWith('/explore') },
     { label: 'Leaderboard', to: '/top', icon: Trophy, match: (p) => p.startsWith('/top') },
     { label: 'Inbox', to: '/inbox', icon: Inbox, match: (p) => p.startsWith('/inbox') },
+    { label: 'AI Hub', to: '/ai-hub', icon: Sparkles, match: (p) => p.startsWith('/ai-hub') },
     {
       label: 'Profile',
       to: '/profile',
@@ -25,11 +28,6 @@ export default function Sidebar() {
       match: (p) => p === '/profile' || p === `/creators/${currentUser.id}`,
     },
   ]
-
-  const handleCategoryClick = (category) => {
-    dispatch(categoryChanged(category))
-    navigate('/explore')
-  }
 
   return (
     <aside className="hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-white px-5 py-6 lg:sticky lg:top-0 lg:flex">
@@ -53,24 +51,6 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-8">
-        <p className="px-3 text-[12px] font-medium uppercase tracking-wide text-text-muted">
-          Categories
-        </p>
-        <div className="mt-2 flex flex-col gap-1">
-          {categories.map((category) => (
-            <button
-              key={category}
-              type="button"
-              onClick={() => handleCategoryClick(category)}
-              className="rounded-lg px-3 py-2 text-left text-[14px] text-text-secondary transition-colors hover:text-orange"
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <div className="mt-auto flex flex-col gap-4 pt-6">
         <Link
           to="/add-project"
@@ -92,6 +72,27 @@ export default function Sidebar() {
             Admin dashboard
           </Link>
         )}
+
+        <div className="border-t border-border pt-4">
+          {isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => dispatch(loggedOut())}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-[13px] font-medium text-text-muted hover:text-orange"
+            >
+              <LogOut size={16} strokeWidth={1.75} />
+              Log out{authUser?.name ? ` (${authUser.name})` : ''}
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium text-text-muted hover:text-orange"
+            >
+              <User size={16} strokeWidth={1.75} />
+              Log in
+            </Link>
+          )}
+        </div>
       </div>
     </aside>
   )

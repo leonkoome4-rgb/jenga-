@@ -197,34 +197,6 @@ class Connection(db.Model):
         }
 
 
-class Donation(db.Model):
-    __tablename__ = "donations"
-
-    id = db.Column(db.Integer, primary_key=True)
-    donor_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
-    donor_name = db.Column(db.String(120), nullable=True)
-    phone_number = db.Column(db.String(20), nullable=False)
-    amount = db.Column(db.Numeric(10, 2), nullable=False)
-    merchant_request_id = db.Column(db.String(100), nullable=True)
-    checkout_request_id = db.Column(db.String(100), nullable=True, unique=True, index=True)
-    mpesa_receipt_number = db.Column(db.String(60), nullable=True)
-    status = db.Column(db.String(20), nullable=False, default="pending")
-    result_desc = db.Column(db.String(255), nullable=True)
-    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "donor_name": self.donor_name,
-            "phone_number": self.phone_number,
-            "amount": float(self.amount),
-            "status": self.status,
-            "mpesa_receipt_number": self.mpesa_receipt_number,
-            "result_desc": self.result_desc,
-            "created_at": self.created_at.isoformat(),
-        }
-
-
 class AIHistory(db.Model):
     __tablename__ = "ai_history"
 
@@ -243,3 +215,20 @@ class AIHistory(db.Model):
             "output": self.output,
             "created_at": self.created_at.isoformat(),
         }
+
+
+class PasswordResetToken(db.Model):
+    __tablename__ = "password_reset_tokens"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    token_hash = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    used_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    user = db.relationship("User")
+
+    @property
+    def is_valid(self):
+        return self.used_at is None and self.expires_at > utcnow()

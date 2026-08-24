@@ -45,8 +45,8 @@ export default function MarketingContent({ heroTopPadding = 'pt-20' }) {
             hiring.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button to="/explore" variant="primary" className="px-6 py-3">
-              Explore projects
+            <Button to="/discover" variant="primary" className="px-6 py-3">
+              Watch the feed
             </Button>
             <Button to="/add-project" variant="secondary" className="px-6 py-3">
               Share your work

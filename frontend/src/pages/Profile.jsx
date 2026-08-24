@@ -9,16 +9,36 @@ import {
   selectProjectsByOwner,
   projectTipped,
 } from '../features/projects/projectsSlice.js'
-import { selectCurrentUser, selectIsAdmin } from '../features/user/userSlice.js'
+import { selectCurrentUser } from '../features/user/userSlice.js'
+import { selectIsAuthenticated, selectAuthUser } from '../features/auth/authSlice.js'
 
 export default function Profile() {
   const { id } = useParams()
   const dispatch = useDispatch()
   const currentUser = useSelector(selectCurrentUser)
-  const isAdmin = useSelector(selectIsAdmin)
+  const isRealAuthenticated = useSelector(selectIsAuthenticated)
+  const authUser = useSelector(selectAuthUser)
+
+  // Viewing your own profile (no :id in the URL) while genuinely logged in
+  // should show your real Tawi account, not the demo mock persona.
+  const viewingOwnRealProfile = !id && isRealAuthenticated && Boolean(authUser)
+  const isAdmin = viewingOwnRealProfile
+    ? authUser.role === 'admin'
+    : false
+
   const profileId = id ?? currentUser.id
-  const user = getUserById(profileId)
-  const isOwnProfile = profileId === currentUser.id
+  const user = viewingOwnRealProfile
+    ? {
+        id: authUser.id,
+        name: authUser.name,
+        avatarUrl: authUser.avatar_url,
+        bio: authUser.bio || 'No bio yet.',
+        cohort: authUser.cohort_name || 'No cohort set',
+        skills: [],
+        githubLink: authUser.github_url,
+      }
+    : getUserById(profileId)
+  const isOwnProfile = viewingOwnRealProfile || profileId === currentUser.id
   const projects = useSelector((state) => selectProjectsByOwner(state, profileId))
   const [copied, setCopied] = useState(false)
   const [tipped, setTipped] = useState(false)

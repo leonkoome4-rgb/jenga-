@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import AppLayout from './layouts/AppLayout.jsx'
 import Landing from './pages/Landing.jsx'
 import Home from './pages/Home.jsx'
@@ -10,25 +12,59 @@ import Profile from './pages/Profile.jsx'
 import AddProject from './pages/AddProject.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import AdminCohorts from './pages/AdminCohorts.jsx'
+import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
+import AIHub from './pages/AIHub.jsx'
+import NotFound from './pages/NotFound.jsx'
+import AIAssistant from './components/assistant/AIAssistant.jsx'
+import RequireAdmin from './components/RequireAdmin.jsx'
+import { selectAuthToken, selectAuthUser, fetchCurrentUser } from './features/auth/authSlice.js'
 
 function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
+  const dispatch = useDispatch()
+  const token = useSelector(selectAuthToken)
+  const authUser = useSelector(selectAuthUser)
 
-      <Route element={<AppLayout />}>
-        <Route path="/discover" element={<Home />} />
-        <Route path="/explore" element={<Explore />} />
-        <Route path="/top" element={<TopRated />} />
-        <Route path="/inbox" element={<Inbox />} />
-        <Route path="/projects/:id" element={<ProjectDetail />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/creators/:id" element={<Profile />} />
-        <Route path="/add-project" element={<AddProject />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/cohorts" element={<AdminCohorts />} />
-      </Route>
-    </Routes>
+  // Resolve the real logged-in identity once at the root, so role-gated UI
+  // (admin link, profile, AI Hub) is correct everywhere from first paint
+  // instead of each page having to trigger its own fetch.
+  useEffect(() => {
+    if (token && !authUser) dispatch(fetchCurrentUser())
+  }, [token, authUser, dispatch])
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
+        <Route element={<AppLayout />}>
+          <Route path="/discover" element={<Home />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/top" element={<TopRated />} />
+          <Route path="/inbox" element={<Inbox />} />
+          <Route path="/ai-hub" element={<AIHub />} />
+          <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/creators/:id" element={<Profile />} />
+          <Route path="/add-project" element={<AddProject />} />
+
+          <Route element={<RequireAdmin />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/cohorts" element={<AdminCohorts />} />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+
+      <AIAssistant />
+    </>
   )
 }
 

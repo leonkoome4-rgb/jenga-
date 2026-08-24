@@ -23,7 +23,6 @@ def create_app(config_object="app.config.Config"):
         cohorts,
         reference,
         connections,
-        donations,
         ai,
         admin,
     )
@@ -34,7 +33,6 @@ def create_app(config_object="app.config.Config"):
     app.register_blueprint(cohorts.bp)
     app.register_blueprint(reference.bp)
     app.register_blueprint(connections.bp)
-    app.register_blueprint(donations.bp)
     app.register_blueprint(ai.bp)
     app.register_blueprint(admin.bp)
 
