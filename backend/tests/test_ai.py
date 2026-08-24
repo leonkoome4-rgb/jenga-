@@ -1,4 +1,12 @@
+import os
+import pytest
+
 from tests.conftest import auth_header
+
+
+requires_ai_key = pytest.mark.skipif(
+    not os.environ.get("AI_API_KEY"), reason="requires configured AI_API_KEY"
+)
 
 
 def test_ai_routes_require_jwt(client):
@@ -57,6 +65,7 @@ def test_chat_requires_message(client, user_a):
     assert response.status_code == 400
 
 
+@requires_ai_key
 def test_chat_can_navigate_when_authenticated(client, user_a):
     """
     Real end-to-end call: asks the assistant to take the user to the feed and
@@ -94,6 +103,7 @@ def test_chat_rejects_bogus_navigate_target(client, user_a, monkeypatch):
     assert data["result"]["navigate_to"] is None
 
 
+@requires_ai_key
 def test_categorize_real_call_returns_expected_shape(client, user_a):
     """
     Hits the real Groq API using AI_API_KEY from the environment -- this is the

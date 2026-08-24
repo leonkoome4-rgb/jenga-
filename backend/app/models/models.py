@@ -231,4 +231,10 @@ class PasswordResetToken(db.Model):
 
     @property
     def is_valid(self):
-        return self.used_at is None and self.expires_at > utcnow()
+        expires_at = self.expires_at
+        # SQLite does not preserve timezone information for DateTime columns,
+        # whereas PostgreSQL does. Treat a database value without tzinfo as
+        # UTC so reset-token validation behaves identically in both setups.
+        if expires_at and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        return self.used_at is None and expires_at > utcnow()

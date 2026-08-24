@@ -13,8 +13,29 @@ from app.extensions import db as _db
 from app.models import User, Cohort, Category
 
 
+class _CaptchaResponse:
+    def __init__(self, success):
+        self._success = success
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return {"success": self._success, "error-codes": [] if self._success else ["invalid-input-response"]}
+
+
 @pytest.fixture()
-def app():
+def app(monkeypatch):
+    # CAPTCHA itself is verified by the separate production service. Mock it
+    # here so unit tests stay offline and deterministic while preserving the
+    # published always-pass/always-block Cloudflare test-key behaviour.
+    monkeypatch.setenv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA")
+    monkeypatch.setattr(
+        "app.services.captcha_service.requests.post",
+        lambda _url, data, timeout: _CaptchaResponse(
+            data["secret"] == "1x0000000000000000000000000000000AA"
+        ),
+    )
     application = create_app("app.config.TestConfig")
     with application.app_context():
         _db.create_all()
