@@ -59,23 +59,35 @@ def db(app):
 CAPTCHA_TOKEN = "test-turnstile-token"
 
 
-def register_user(client, name="Test User", email="test@example.com", password="password123"):
+def register_user(client, name="Test User", email="test@example.com", password="password123", captcha_token=None):
+    """Register a user. CAPTCHA token is optional for testing without CAPTCHA."""
+    json_data = {
+        "name": name,
+        "email": email,
+        "password": password,
+    }
+    if captcha_token is not None:
+        json_data["captcha_token"] = captcha_token
+    
     response = client.post(
         "/api/auth/register",
-        json={
-            "name": name,
-            "email": email,
-            "password": password,
-            "captcha_token": CAPTCHA_TOKEN,
-        },
+        json=json_data,
     )
     return response.get_json()
 
 
-def login_user(client, email, password="password123"):
+def login_user(client, email, password="password123", captcha_token=None):
+    """Login a user. CAPTCHA token is optional for testing without CAPTCHA."""
+    json_data = {
+        "email": email,
+        "password": password,
+    }
+    if captcha_token is not None:
+        json_data["captcha_token"] = captcha_token
+    
     response = client.post(
         "/api/auth/login",
-        json={"email": email, "password": password, "captcha_token": CAPTCHA_TOKEN},
+        json=json_data,
     )
     return response
 
@@ -86,19 +98,22 @@ def auth_header(token):
 
 @pytest.fixture()
 def user_a(client):
-    data = register_user(client, "User A", "usera@example.com")
+    # Test without CAPTCHA token (should work now)
+    data = register_user(client, "User A", "usera@example.com", captcha_token=None)
     return data["user"], data["token"]
 
 
 @pytest.fixture()
 def user_b(client):
-    data = register_user(client, "User B", "userb@example.com")
+    # Test without CAPTCHA token (should work now)
+    data = register_user(client, "User B", "userb@example.com", captcha_token=None)
     return data["user"], data["token"]
 
 
 @pytest.fixture()
 def admin_user(client, db):
-    data = register_user(client, "Admin User", "admin@example.com")
+    # Test without CAPTCHA token (should work now)
+    data = register_user(client, "Admin User", "admin@example.com", captcha_token=None)
     user = db.session.get(User, data["user"]["id"])
     user.role = "admin"
     db.session.commit()
