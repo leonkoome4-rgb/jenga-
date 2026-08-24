@@ -69,7 +69,10 @@ cp .env.example .env   # VITE_API_URL, VITE_TURNSTILE_SITE_KEY
 npm run dev   # http://localhost:5173
 ```
 
-Deployed via Vercel with root directory set to `frontend/`.
+Vercel can deploy directly from the repository root using the included
+`vercel.json`, which installs and builds the `frontend/` application. If you
+prefer configuring it in the Vercel dashboard instead, set the project's Root
+Directory to `frontend/`.
 
 ## Screens
 
