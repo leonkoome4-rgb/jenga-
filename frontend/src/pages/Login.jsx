@@ -21,6 +21,9 @@ export default function Login() {
   const [captchaToken, setCaptchaToken] = useState(null)
   const [captchaKey, setCaptchaKey] = useState(0)
 
+  // Check if we have a valid CAPTCHA site key
+  const hasCaptchaKey = import.meta.env.VITE_TURNSTILE_SITE_KEY && !import.meta.env.VITE_TURNSTILE_SITE_KEY.startsWith('1x00000000')
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     dispatch(authErrorCleared())
@@ -74,12 +77,14 @@ export default function Login() {
           />
         </div>
 
-        <TurnstileWidget
-          key={captchaKey}
-          onVerify={setCaptchaToken}
-          onExpire={() => setCaptchaToken(null)}
-          onError={() => setCaptchaToken(null)}
-        />
+        {hasCaptchaKey && (
+          <TurnstileWidget
+            key={captchaKey}
+            onVerify={setCaptchaToken}
+            onExpire={() => setCaptchaToken(null)}
+            onError={() => setCaptchaToken(null)}
+          />
+        )}
 
         <Button
           type="submit"
