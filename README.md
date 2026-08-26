@@ -15,6 +15,17 @@ frontend/   React + Redux Toolkit + Tailwind
 
 ## Backend
 
+For local development, start both the backend and frontend from the repository
+root with one command:
+
+```bash
+./scripts/dev.sh
+```
+
+The command keeps the services together: if either process stops, the other is
+stopped too. The API is available at `http://127.0.0.1:5000` and the frontend
+at `http://localhost:5173`.
+
 ```bash
 cd backend
 python3 -m venv venv && venv/bin/pip install -r requirements.txt
