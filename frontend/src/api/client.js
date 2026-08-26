@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000')
+// Keep browser requests same-origin. Vite proxies /api locally and Nginx
+// proxies it in the container deployment, avoiding fragile localhost/CORS
+// differences between browsers and machines.
+const API_URL = import.meta.env.VITE_API_URL || ''
 
 class ApiError extends Error {
   constructor(message, status, data) {
