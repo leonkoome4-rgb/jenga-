@@ -85,6 +85,27 @@ Vercel can deploy directly from the repository root using the included
 prefer configuring it in the Vercel dashboard instead, set the project's Root
 Directory to `frontend/`.
 
+## Production deployment
+
+The included Docker Compose setup runs the full application (React frontend,
+Flask API, PostgreSQL, and database migrations) as one stack. It is the
+simplest way to deploy without exposing the API or database separately.
+
+```bash
+cp deploy.env.example .env
+# Edit .env and replace every placeholder secret.
+docker compose up --build -d
+```
+
+The application is then available on port `8080`. Put it behind an HTTPS
+reverse proxy or deploy the three services to a container host that provides
+TLS. The backend runs Alembic migrations automatically on startup and the
+PostgreSQL data is stored in the `postgres_data` volume.
+
+If deploying the frontend to Vercel instead, deploy the backend and PostgreSQL
+to a separate HTTPS-capable host, then set `VITE_API_URL` in Vercel to the
+public API URL and set `FRONTEND_ORIGIN` on the backend to the Vercel URL.
+
 ## Screens
 
 - **Landing** (`/`) — marketing page with login / get started
