@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { AlertCircle } from 'lucide-react'
 import AuthLayout from '../layouts/AuthLayout.jsx'
 import Button from '../components/Button.jsx'
-import TurnstileWidget from '../components/TurnstileWidget.jsx'
 import { registerUser, selectAuthStatus, selectAuthError, authErrorCleared } from '../features/auth/authSlice.js'
 
 const inputClasses =
@@ -19,23 +18,17 @@ export default function Register() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [captchaToken, setCaptchaToken] = useState(null)
-  const [captchaKey, setCaptchaKey] = useState(0)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     dispatch(authErrorCleared())
 
     const result = await dispatch(
-      registerUser({ name, email, password, captcha_token: captchaToken }),
+      registerUser({ name, email, password }),
     )
 
     if (registerUser.fulfilled.match(result)) {
       navigate('/ai-hub')
-    } else {
-      // Turnstile tokens are single-use -- force a fresh widget after any failure.
-      setCaptchaToken(null)
-      setCaptchaKey((k) => k + 1)
     }
   }
 
@@ -85,17 +78,10 @@ export default function Register() {
           />
         </div>
 
-        <TurnstileWidget
-          key={captchaKey}
-          onVerify={setCaptchaToken}
-          onExpire={() => setCaptchaToken(null)}
-          onError={() => setCaptchaToken(null)}
-        />
-
         <Button
           type="submit"
           variant="primary"
-          disabled={!captchaToken || status === 'loading'}
+          disabled={status === 'loading'}
           className="w-full py-3"
         >
           {status === 'loading' ? 'Creating account…' : 'Create account'}

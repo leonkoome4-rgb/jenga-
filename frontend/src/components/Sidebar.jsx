@@ -16,7 +16,7 @@ export default function Sidebar() {
   const isAdmin = authUser?.role === 'admin'
 
   const navItems = [
-    { label: 'Home', to: '/', icon: Home, match: (p) => p === '/' },
+    { label: 'Home', to: '/discover', icon: Home, match: (p) => p === '/discover' },
     { label: 'Explore', to: '/explore', icon: Search, match: (p) => p.startsWith('/explore') },
     { label: 'Leaderboard', to: '/top', icon: Trophy, match: (p) => p.startsWith('/top') },
     { label: 'Inbox', to: '/inbox', icon: Inbox, match: (p) => p.startsWith('/inbox') },
@@ -25,7 +25,7 @@ export default function Sidebar() {
       label: 'Profile',
       to: '/profile',
       icon: User,
-      match: (p) => p === '/profile' || p === `/creators/${currentUser.id}`,
+      match: (p) => p === '/profile' || p === `/creators/${authUser?.id ?? currentUser.id}`,
     },
   ]
 

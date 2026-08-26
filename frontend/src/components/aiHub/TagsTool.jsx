@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AlertCircle, Sparkles, X } from 'lucide-react'
 import Button from '../Button.jsx'
 import TagInput from '../TagInput.jsx'
@@ -12,14 +12,12 @@ export default function TagsTool() {
   const [description, setDescription] = useState('')
   const [tech, setTech] = useState([])
   const { run, loading, error, result } = useAITool('/api/ai/tags')
-  const [editableTags, setEditableTags] = useState([])
-
-  useEffect(() => {
-    setEditableTags(result?.tags || [])
-  }, [result])
+  const [removedTags, setRemovedTags] = useState([])
+  const editableTags = result?.tags?.filter((tag) => !removedTags.includes(tag)) || []
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    setRemovedTags([])
     run({ title, description, tech })
   }
 
@@ -79,7 +77,7 @@ export default function TagsTool() {
                   {tag}
                   <button
                     type="button"
-                    onClick={() => setEditableTags((prev) => prev.filter((t) => t !== tag))}
+                    onClick={() => setRemovedTags((prev) => [...prev, tag])}
                     aria-label={`Remove ${tag}`}
                   >
                     <X size={12} strokeWidth={2} />

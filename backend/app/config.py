@@ -30,7 +30,10 @@ class Config:
 
 class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "TEST_DATABASE_URL", "postgresql+psycopg://localhost/tawi_test"
+        # Keep PostgreSQL available for integration tests, but make the normal
+        # test suite self-contained for contributors who do not run a local
+        # PostgreSQL service.
+        "TEST_DATABASE_URL", "sqlite://"
     )
     TESTING = True
     JWT_SECRET_KEY = "test-secret-key-that-is-long-enough-for-hs256"

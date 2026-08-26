@@ -26,6 +26,7 @@ import {
   fetchCurrentUser,
   LOCAL_SESSION_TOKEN,
 } from './features/auth/authSlice.js'
+import { fetchProjects } from './features/projects/projectsSlice.js'
 
 function App() {
   const dispatch = useDispatch()
@@ -41,6 +42,10 @@ function App() {
       dispatch(fetchCurrentUser())
     }
   }, [token, authUser, dispatch])
+
+  useEffect(() => {
+    dispatch(fetchProjects())
+  }, [dispatch])
 
   return (
     <>

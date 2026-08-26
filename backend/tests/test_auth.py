@@ -2,13 +2,13 @@ from tests.conftest import auth_header, register_user, login_user, CAPTCHA_TOKEN
 
 
 def test_register_creates_user_and_returns_token(client):
+    """Test registration works WITHOUT CAPTCHA token"""
     response = client.post(
         "/api/auth/register",
         json={
             "name": "Ada Lovelace",
             "email": "ada@example.com",
             "password": "password123",
-            "captcha_token": CAPTCHA_TOKEN,
         },
     )
     data = response.get_json()
@@ -20,15 +20,28 @@ def test_register_creates_user_and_returns_token(client):
     assert data["user"]["role"] == "student"
 
 
+def test_register_works_without_captcha(client):
+    """Test that registration works even without CAPTCHA token"""
+    data = register_user(client, "Ada", "ada@example.com", captcha_token=None)
+    assert data["token"]
+    assert data["user"]["email"] == "ada@example.com"
+
+
+def test_register_also_works_with_captcha(client):
+    """Test that registration still works WITH CAPTCHA token"""
+    data = register_user(client, "Bob", "bob@example.com", captcha_token=CAPTCHA_TOKEN)
+    assert data["token"]
+    assert data["user"]["email"] == "bob@example.com"
+
+
 def test_register_rejects_duplicate_email(client):
-    register_user(client, "Ada", "ada@example.com")
+    register_user(client, "Ada", "ada@example.com", captcha_token=None)
     response = client.post(
         "/api/auth/register",
         json={
             "name": "Ada Two",
             "email": "ada@example.com",
             "password": "password123",
-            "captcha_token": CAPTCHA_TOKEN,
         },
     )
     assert response.status_code == 409
@@ -41,24 +54,39 @@ def test_register_rejects_short_password(client):
             "name": "Ada",
             "email": "ada@example.com",
             "password": "short",
-            "captcha_token": CAPTCHA_TOKEN,
         },
     )
     assert response.status_code == 400
 
 
 def test_login_with_correct_credentials(client):
-    register_user(client, "Ada", "ada@example.com")
-    response = login_user(client, "ada@example.com")
+    register_user(client, "Ada", "ada@example.com", captcha_token=None)
+    response = login_user(client, "ada@example.com", captcha_token=None)
     data = response.get_json()
 
     assert response.status_code == 200
     assert data["token"]
 
 
+def test_login_without_captcha(client):
+    """Test that login works WITHOUT CAPTCHA token"""
+    register_user(client, "Ada", "ada@example.com", captcha_token=None)
+    response = login_user(client, "ada@example.com", captcha_token=None)
+    assert response.status_code == 200
+    assert response.get_json()["token"]
+
+
+def test_login_also_works_with_captcha(client):
+    """Test that login still works WITH CAPTCHA token"""
+    register_user(client, "Bob", "bob@example.com", captcha_token=None)
+    response = login_user(client, "bob@example.com", captcha_token=CAPTCHA_TOKEN)
+    assert response.status_code == 200
+    assert response.get_json()["token"]
+
+
 def test_login_with_wrong_password_is_rejected(client):
-    register_user(client, "Ada", "ada@example.com")
-    response = login_user(client, "ada@example.com", password="wrong-password")
+    register_user(client, "Ada", "ada@example.com", captcha_token=None)
+    response = login_user(client, "ada@example.com", password="wrong-password", captcha_token=None)
     assert response.status_code == 401
 
 
@@ -81,45 +109,10 @@ def test_me_returns_current_user(client, user_a):
     assert data["user"]["id"] == user["id"]
 
 
-# --- CAPTCHA -----------------------------------------------------------
+# --- CAPTCHA (Optional) -----------------------------------------------------------
 
 
-def test_register_rejects_missing_captcha_token(client):
-    response = client.post(
-        "/api/auth/register",
-        json={"name": "Ada", "email": "ada@example.com", "password": "password123"},
-    )
-    data = response.get_json()
-
-    assert response.status_code == 400
-    assert data["success"] is False
-    assert "verification" in data["error"].lower()
-
-
-def test_login_rejects_missing_captcha_token(client):
-    register_user(client, "Ada", "ada@example.com")
-    response = client.post(
-        "/api/auth/login", json={"email": "ada@example.com", "password": "password123"}
-    )
-    assert response.status_code == 400
-
-
-def test_login_does_not_issue_jwt_when_captcha_fails(client):
-    """A direct API call with no captcha_token must be rejected before
-    credentials are even checked -- proves the backend enforces this
-    itself rather than trusting the frontend to gate it."""
-    register_user(client, "Ada", "ada@example.com")
-    response = client.post(
-        "/api/auth/login",
-        json={"email": "ada@example.com", "password": "wrong-but-irrelevant"},
-    )
-    data = response.get_json()
-
-    assert response.status_code == 400
-    assert "token" not in data
-
-
-def test_register_rejects_invalid_captcha_token(client):
+def test_register_with_invalid_captcha_token(client):
     """Uses Cloudflare's published 'always blocks' secret key to prove a
     verification failure (not just a missing token) is also rejected."""
     import os
@@ -150,7 +143,7 @@ def test_register_rejects_invalid_captcha_token(client):
 def test_forgot_password_returns_generic_message_for_unknown_email(client):
     response = client.post(
         "/api/auth/forgot-password",
-        json={"email": "nobody@example.com", "captcha_token": CAPTCHA_TOKEN},
+        json={"email": "nobody@example.com"},
     )
     data = response.get_json()
 
@@ -160,10 +153,10 @@ def test_forgot_password_returns_generic_message_for_unknown_email(client):
 
 
 def test_forgot_password_issues_token_for_known_email(client):
-    register_user(client, "Ada", "ada@example.com")
+    register_user(client, "Ada", "ada@example.com", captcha_token=None)
     response = client.post(
         "/api/auth/forgot-password",
-        json={"email": "ada@example.com", "captcha_token": CAPTCHA_TOKEN},
+        json={"email": "ada@example.com"},
     )
     data = response.get_json()
 
@@ -172,10 +165,10 @@ def test_forgot_password_issues_token_for_known_email(client):
 
 
 def test_reset_password_with_valid_token_changes_password(client):
-    register_user(client, "Ada", "ada@example.com")
+    register_user(client, "Ada", "ada@example.com", captcha_token=None)
     forgot_response = client.post(
         "/api/auth/forgot-password",
-        json={"email": "ada@example.com", "captcha_token": CAPTCHA_TOKEN},
+        json={"email": "ada@example.com"},
     )
     reset_token = forgot_response.get_json()["reset_token"]
 
@@ -184,33 +177,32 @@ def test_reset_password_with_valid_token_changes_password(client):
         json={
             "token": reset_token,
             "password": "brand-new-password",
-            "captcha_token": CAPTCHA_TOKEN,
         },
     )
     assert reset_response.status_code == 200
 
-    old_login = login_user(client, "ada@example.com", password="password123")
+    old_login = login_user(client, "ada@example.com", password="password123", captcha_token=None)
     assert old_login.status_code == 401
 
-    new_login = login_user(client, "ada@example.com", password="brand-new-password")
+    new_login = login_user(client, "ada@example.com", password="brand-new-password", captcha_token=None)
     assert new_login.status_code == 200
 
 
 def test_reset_password_token_cannot_be_reused(client):
-    register_user(client, "Ada", "ada@example.com")
+    register_user(client, "Ada", "ada@example.com", captcha_token=None)
     forgot_response = client.post(
         "/api/auth/forgot-password",
-        json={"email": "ada@example.com", "captcha_token": CAPTCHA_TOKEN},
+        json={"email": "ada@example.com"},
     )
     reset_token = forgot_response.get_json()["reset_token"]
 
-    payload = {"token": reset_token, "password": "first-new-password", "captcha_token": CAPTCHA_TOKEN}
+    payload = {"token": reset_token, "password": "first-new-password"}
     first = client.post("/api/auth/reset-password", json=payload)
     assert first.status_code == 200
 
     second = client.post(
         "/api/auth/reset-password",
-        json={"token": reset_token, "password": "second-new-password", "captcha_token": CAPTCHA_TOKEN},
+        json={"token": reset_token, "password": "second-new-password"},
     )
     assert second.status_code == 400
 
@@ -221,7 +213,6 @@ def test_reset_password_rejects_invalid_token(client):
         json={
             "token": "not-a-real-token",
             "password": "some-new-password",
-            "captcha_token": CAPTCHA_TOKEN,
         },
     )
     assert response.status_code == 400

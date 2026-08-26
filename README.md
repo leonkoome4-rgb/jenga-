@@ -15,6 +15,17 @@ frontend/   React + Redux Toolkit + Tailwind
 
 ## Backend
 
+For local development, start both the backend and frontend from the repository
+root with one command:
+
+```bash
+./scripts/dev.sh
+```
+
+The command keeps the services together: if either process stops, the other is
+stopped too. The API is available at `http://127.0.0.1:5000` and the frontend
+at `http://localhost:5173`.
+
 ```bash
 cd backend
 python3 -m venv venv && venv/bin/pip install -r requirements.txt
@@ -93,13 +104,42 @@ cp .env.example .env   # VITE_API_URL, VITE_TURNSTILE_SITE_KEY
 npm run dev   # http://localhost:5173
 ```
 
-Deployed via Vercel. **Important**: the project's dashboard Root Directory
-setting must be `frontend`, not `.` (the repo root) — otherwise Vercel's
-auto-deploy-on-push runs `npm install`/`vite build` from a directory with no
-`package.json` and fails instantly with `vite: command not found`. Set it
-under Project Settings → General → Root Directory. Until that's set
-correctly, auto-deploy on push will keep silently failing; deploy manually
-in the meantime with `vercel --prod` from inside `frontend/`.
+Vercel deploys directly from the repository root using the included
+root-level `vercel.json`, which explicitly installs and builds the
+`frontend/` app (`npm --prefix frontend ci` / `npm --prefix frontend run
+build`) regardless of the project's dashboard Root Directory setting. This
+matters because without it, Vercel's auto-deploy-on-push runs from a
+directory with no `package.json` and fails instantly with `vite: command not
+found` — that was silently broken for a while before this file was added.
+
+## Production deployment
+
+Two ways to run the full stack (frontend + backend + database) somewhere
+real:
+
+**Render** — `backend/render.yaml` is a Blueprint that provisions the API and
+a free Postgres database in one step; see "Deploying the backend" above for
+the exact steps. Pair it with the Vercel frontend deploy above by setting
+`VITE_API_URL` to the Render service's URL.
+
+**Docker Compose** — runs React, Flask, PostgreSQL, and migrations as one
+stack, useful when you'd rather not split the frontend and backend across two
+platforms:
+
+```bash
+cp deploy.env.example .env
+# Edit .env and replace every placeholder secret.
+docker compose up --build -d
+```
+
+The application is then available on port `8080`. Put it behind an HTTPS
+reverse proxy or deploy the three services to a container host that provides
+TLS. The backend runs Alembic migrations automatically on startup and the
+PostgreSQL data is stored in the `postgres_data` volume. If you deploy the
+frontend to Vercel instead of using the container's frontend, deploy just the
+backend + PostgreSQL from this stack, set `VITE_API_URL` in Vercel to that
+backend's public URL, and set `FRONTEND_ORIGIN` on the backend to the Vercel
+URL.
 
 ## Screens
 
