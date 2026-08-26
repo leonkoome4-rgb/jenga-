@@ -88,5 +88,7 @@ export const selectProjectById = (state, id) =>
   state.projects.items.find((p) => p.id === id)
 export const selectProjectsByOwner = (state, ownerId) =>
   state.projects.items.filter(
-    (p) => p.owner.id === ownerId || p.members.some((m) => m.id === ownerId),
+    (p) =>
+      String(p.owner.id) === String(ownerId) ||
+      p.members.some((member) => String(member.id) === String(ownerId)),
   )

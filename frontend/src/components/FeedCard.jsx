@@ -1,10 +1,12 @@
 import { forwardRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { Heart, Handshake, HandCoins, Share2, Check, Link2 } from 'lucide-react'
 import MediaBackground from './MediaBackground.jsx'
 import Avatar from './Avatar.jsx'
 import { projectLikeToggled, projectTipped } from '../features/projects/projectsSlice.js'
+import { api } from '../api/client.js'
+import { selectAuthToken } from '../features/auth/authSlice.js'
 
 const CATEGORY_TINT = {
   'Web Dev': '#4FA3DC',
@@ -16,7 +18,9 @@ const CATEGORY_TINT = {
 const FeedCard = forwardRef(function FeedCard({ project, isActive = true }, ref) {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const token = useSelector(selectAuthToken)
   const [connected, setConnected] = useState(false)
+  const [connectionError, setConnectionError] = useState('')
   const [copied, setCopied] = useState(false)
   const [tipped, setTipped] = useState(false)
   const tint = CATEGORY_TINT[project.category] ?? '#4FA3DC'
@@ -32,6 +36,21 @@ const FeedCard = forwardRef(function FeedCard({ project, isActive = true }, ref)
   }
 
   const openDetail = () => navigate(`/projects/${project.id}`)
+
+  const handleConnect = async (e) => {
+    stop(e)
+    if (!token) {
+      setConnectionError('Log in to connect')
+      return
+    }
+    try {
+      await api.post('/api/connections', { recipient_id: Number(project.owner.id) }, { token })
+      setConnected(true)
+      setConnectionError('')
+    } catch (err) {
+      setConnectionError(err.data?.error || 'Could not send request')
+    }
+  }
 
   return (
     <section
@@ -149,10 +168,7 @@ const FeedCard = forwardRef(function FeedCard({ project, isActive = true }, ref)
 
           <button
             type="button"
-            onClick={(e) => {
-              stop(e)
-              setConnected(true)
-            }}
+            onClick={handleConnect}
             className="flex flex-col items-center gap-1"
             aria-label="Connect"
           >
@@ -165,6 +181,7 @@ const FeedCard = forwardRef(function FeedCard({ project, isActive = true }, ref)
               {connected ? 'Sent' : 'Connect'}
             </span>
           </button>
+          {connectionError && <span className="max-w-16 text-center text-[10px] text-orange">{connectionError}</span>}
 
           <button
             type="button"

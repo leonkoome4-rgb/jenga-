@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react'
 import { useParams, Navigate, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { useState } from 'react'
 import { ShieldCheck, Link2, Check, HandCoins } from 'lucide-react'
 import Avatar from '../components/Avatar.jsx'
 import ProjectCard from '../components/ProjectCard.jsx'
 import { getUserById } from '../data/users.js'
+import { api } from '../api/client.js'
 import {
   selectProjectsByOwner,
   projectTipped,
@@ -18,15 +19,40 @@ export default function Profile() {
   const currentUser = useSelector(selectCurrentUser)
   const isRealAuthenticated = useSelector(selectIsAuthenticated)
   const authUser = useSelector(selectAuthUser)
+  const [remoteUser, setRemoteUser] = useState(null)
+  const [failedProfileId, setFailedProfileId] = useState(null)
 
   // Viewing your own profile (no :id in the URL) while genuinely logged in
   // should show your real Tawi account, not the demo mock persona.
-  const viewingOwnRealProfile = !id && isRealAuthenticated && Boolean(authUser)
+  const viewingOwnRealProfile =
+    isRealAuthenticated && Boolean(authUser) && (!id || String(id) === String(authUser.id))
   const isAdmin = viewingOwnRealProfile
     ? authUser.role === 'admin'
     : false
 
-  const profileId = id ?? currentUser.id
+  const profileId = String(id ?? (viewingOwnRealProfile ? authUser.id : currentUser.id))
+  const shouldFetchProfile = Boolean(id && (!authUser || String(authUser.id) !== String(id)))
+  const profileLoading =
+    shouldFetchProfile &&
+    String(remoteUser?.id) !== String(id) &&
+    String(failedProfileId) !== String(id)
+
+  useEffect(() => {
+    if (!shouldFetchProfile) return undefined
+
+    let cancelled = false
+    api.get(`/api/users/${id}`)
+      .then((data) => {
+        if (!cancelled) setRemoteUser(data.user)
+      })
+      .catch(() => {
+        if (!cancelled) setFailedProfileId(String(id))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [id, shouldFetchProfile])
+
   const user = viewingOwnRealProfile
     ? {
         id: authUser.id,
@@ -37,11 +63,25 @@ export default function Profile() {
         skills: [],
         githubLink: authUser.github_url,
       }
-    : getUserById(profileId)
-  const isOwnProfile = viewingOwnRealProfile || profileId === currentUser.id
+    : remoteUser
+      ? {
+          id: remoteUser.id,
+          name: remoteUser.name,
+          avatarUrl: remoteUser.avatar_url,
+          bio: remoteUser.bio || 'No bio yet.',
+          cohort: remoteUser.cohort_name || 'No cohort set',
+          skills: [],
+          githubLink: remoteUser.github_url,
+        }
+      : getUserById(profileId)
+  const isOwnProfile = viewingOwnRealProfile || String(profileId) === String(currentUser.id)
   const projects = useSelector((state) => selectProjectsByOwner(state, profileId))
   const [copied, setCopied] = useState(false)
   const [tipped, setTipped] = useState(false)
+
+  if (profileLoading) {
+    return <div className="p-8 text-center text-[14px] text-text-muted">Loading profile…</div>
+  }
 
   if (!user) {
     return <Navigate to="/discover" replace />

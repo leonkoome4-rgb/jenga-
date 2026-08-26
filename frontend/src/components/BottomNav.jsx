@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { Home, Search, Trophy, Plus, Inbox, User } from 'lucide-react'
 import { selectCurrentUser } from '../features/user/userSlice.js'
+import { selectAuthUser } from '../features/auth/authSlice.js'
 
 // Bottom nav is capped at 5 destinations + 1 action, per Material/Apple HIG
 // guidance -- AI Hub moved to the Sidebar (desktop) and the assistant panel
@@ -9,9 +10,10 @@ import { selectCurrentUser } from '../features/user/userSlice.js'
 export default function BottomNav() {
   const location = useLocation()
   const currentUser = useSelector(selectCurrentUser)
+  const authUser = useSelector(selectAuthUser)
 
   const leadingItems = [
-    { label: 'Home', to: '/', icon: Home, match: (p) => p === '/' },
+    { label: 'Home', to: '/discover', icon: Home, match: (p) => p === '/discover' },
     { label: 'Search', to: '/explore', icon: Search, match: (p) => p.startsWith('/explore') },
     { label: 'Leaderboard', to: '/top', icon: Trophy, match: (p) => p.startsWith('/top') },
   ]
@@ -21,7 +23,7 @@ export default function BottomNav() {
       label: 'Profile',
       to: '/profile',
       icon: User,
-      match: (p) => p === '/profile' || p === `/creators/${currentUser.id}`,
+      match: (p) => p === '/profile' || p === `/creators/${authUser?.id ?? currentUser.id}`,
     },
   ]
 
