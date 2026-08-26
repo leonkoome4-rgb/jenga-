@@ -1,0 +1,13 @@
+[Unit]
+Description=Tawi Flask backend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/jason/jenga-/backend
+ExecStart=/home/jason/jenga-/backend/.venv/bin/python /home/jason/jenga-/backend/run.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

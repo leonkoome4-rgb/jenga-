@@ -1,0 +1,14 @@
+[Unit]
+Description=Tawi Vite frontend
+After=network.target tawi-backend.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/jason/jenga-/frontend
+Environment=PATH=/home/jason/.nvm/versions/node/v24.18.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/jason/.nvm/versions/node/v24.18.0/bin/npm run dev -- --host 127.0.0.1
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target
