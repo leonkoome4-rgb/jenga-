@@ -26,6 +26,26 @@ def _resolve_tech_tags(names):
     return tags
 
 
+def _resolve_named_record(model, record_id, name):
+    """Accept either an existing id or a name from the project form."""
+    if record_id is not None:
+        record = db.session.get(model, record_id)
+        if not record:
+            return None
+        return record
+
+    name = (name or "").strip()
+    if not name:
+        return None
+
+    record = model.query.filter(db.func.lower(model.name) == name.lower()).first()
+    if not record:
+        record = model(name=name)
+        db.session.add(record)
+        db.session.flush()
+    return record
+
+
 @bp.get("")
 def list_projects():
     query = Project.query
@@ -66,6 +86,13 @@ def create_project():
     if not name or not description:
         return jsonify({"success": False, "error": "name and description are required"}), 400
 
+    category = _resolve_named_record(Category, data.get("category_id"), data.get("category"))
+    cohort = _resolve_named_record(Cohort, data.get("cohort_id"), data.get("cohort"))
+    if data.get("category_id") is not None and not category:
+        return jsonify({"success": False, "error": "Invalid category_id"}), 400
+    if data.get("cohort_id") is not None and not cohort:
+        return jsonify({"success": False, "error": "Invalid cohort_id"}), 400
+
     project = Project(
         name=name,
         description=description,
@@ -74,8 +101,8 @@ def create_project():
         video_url=data.get("video_url"),
         github_link=data.get("github_link"),
         live_link=data.get("live_link"),
-        category_id=data.get("category_id"),
-        cohort_id=data.get("cohort_id") or current_user.cohort_id,
+        category_id=category.id if category else None,
+        cohort_id=cohort.id if cohort else current_user.cohort_id,
     )
     project.tech_tags = _resolve_tech_tags(data.get("tech_tags"))
     db.session.add(project)

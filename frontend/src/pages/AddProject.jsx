@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { nanoid } from '@reduxjs/toolkit'
 import { X, Upload, Video, Check } from 'lucide-react'
 import Button from '../components/Button.jsx'
 import Avatar from '../components/Avatar.jsx'
 import { categories } from '../data/categories.js'
 import { cohorts } from '../data/cohorts.js'
 import { users } from '../data/users.js'
-import { PLACEHOLDER_LINK } from '../data/constants.js'
-import { projectAdded } from '../features/projects/projectsSlice.js'
-import { selectCurrentUser } from '../features/user/userSlice.js'
+import { api } from '../api/client.js'
+import { projectCreated } from '../features/projects/projectsSlice.js'
+import { selectAuthToken, selectAuthUser } from '../features/auth/authSlice.js'
 
 const inputClasses =
   'w-full rounded-xl border border-border bg-white px-4 py-2.5 text-[14px] text-navy placeholder:text-text-muted focus:outline-none focus:border-orange'
@@ -20,10 +19,13 @@ const labelClasses = 'text-[13px] font-medium text-navy'
 export default function AddProject() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const currentUser = useSelector(selectCurrentUser)
+  const token = useSelector(selectAuthToken)
+  const currentUser = useSelector(selectAuthUser)
 
   const [techInput, setTechInput] = useState('')
   const [published, setPublished] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [mediaKind, setMediaKind] = useState(null)
   const [form, setForm] = useState({
     name: '',
@@ -73,34 +75,43 @@ export default function AddProject() {
 
   const canPublish = form.name.trim() && form.description.trim()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!canPublish) return
+    if (!token || !currentUser) {
+      setSubmitError('Please log in before publishing a project.')
+      return
+    }
 
-    const id = nanoid()
-    const members = users.filter((u) => form.memberIds.includes(u.id))
-    dispatch(
-      projectAdded({
-        id,
-        name: form.name.trim(),
-        description: form.description.trim(),
-        fullDescription: form.fullDescription.trim() || form.description.trim(),
-        category: form.category,
-        cohort: form.cohort,
-        techStack: form.techStack,
-        githubLink: form.githubLink.trim() || PLACEHOLDER_LINK,
-        liveLink: form.liveLink.trim() || PLACEHOLDER_LINK,
-        imageUrl: form.imageUrl,
-        videoUrl: form.videoUrl,
-        owner: { id: currentUser.id, name: currentUser.name, avatarUrl: currentUser.avatarUrl },
-        members: [
-          { id: currentUser.id, name: currentUser.name, avatarUrl: currentUser.avatarUrl },
-          ...members.map((m) => ({ id: m.id, name: m.name, avatarUrl: m.avatarUrl })),
-        ],
-      }),
-    )
-    setPublished(true)
-    setTimeout(() => navigate(`/projects/${id}`), 900)
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      const data = await api.post(
+        '/api/projects',
+        {
+          name: form.name.trim(),
+          description: form.description.trim(),
+          full_description: form.fullDescription.trim() || form.description.trim(),
+          category: form.category,
+          cohort: form.cohort,
+          tech_tags: form.techStack,
+          github_link: form.githubLink.trim() || null,
+          live_link: form.liveLink.trim() || null,
+          // Browser object URLs only exist for the current session. Do not
+          // store one as though it were a permanent uploaded asset.
+          image_url: form.imageUrl?.startsWith('blob:') ? null : form.imageUrl,
+          video_url: form.videoUrl?.startsWith('blob:') ? null : form.videoUrl,
+        },
+        { token },
+      )
+      dispatch(projectCreated(data.project))
+      setPublished(true)
+      setTimeout(() => navigate(`/projects/${data.project.id}`), 900)
+    } catch (err) {
+      setSubmitError(err.data?.error || err.message || 'Unable to publish the project.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (published) {
@@ -123,6 +134,9 @@ export default function AddProject() {
       </p>
 
       <div className="mt-8 flex flex-col gap-6">
+        {submitError && (
+          <p className="rounded-xl bg-orange/10 px-4 py-3 text-[13px] text-navy">{submitError}</p>
+        )}
         <div className="flex flex-col gap-2">
           <label className={labelClasses}>Cover image or demo clip</label>
           <label className="cursor-pointer">
@@ -281,7 +295,7 @@ export default function AddProject() {
           <label className={labelClasses}>Add group members</label>
           <div className="mt-1 flex flex-col divide-y divide-border rounded-xl border border-border bg-white">
             {users
-              .filter((u) => u.id !== currentUser.id)
+              .filter((u) => String(u.id) !== String(currentUser?.id))
               .map((u) => {
                 const checked = form.memberIds.includes(u.id)
                 return (
@@ -310,8 +324,8 @@ export default function AddProject() {
         </div>
       </div>
 
-      <Button type="submit" variant="primary" disabled={!canPublish} className="mt-10 w-full py-3">
-        Publish project
+      <Button type="submit" variant="primary" disabled={!canPublish || submitting} className="mt-10 w-full py-3">
+        {submitting ? 'Publishing…' : 'Publish project'}
       </Button>
     </form>
   )

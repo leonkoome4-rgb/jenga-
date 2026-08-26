@@ -25,6 +25,29 @@ def test_owner_can_update_their_own_project(client, user_a):
     assert data["project"]["name"] == "Updated Name"
 
 
+def test_create_project_persists_form_names_and_tags(client, user_a):
+    _, token = user_a
+    response = client.post(
+        "/api/projects",
+        json={
+            "name": "Persisted portfolio",
+            "description": "A project submitted from the web form",
+            "category": "Web Dev",
+            "cohort": "Cohort 301",
+            "tech_tags": ["React", "Flask"],
+        },
+        headers=auth_header(token),
+    )
+
+    assert response.status_code == 201
+    project = response.get_json()["project"]
+    fetched = client.get(f"/api/projects/{project['id']}").get_json()["project"]
+    assert fetched["name"] == "Persisted portfolio"
+    assert fetched["category"]["name"] == "Web Dev"
+    assert fetched["cohort"]["name"] == "Cohort 301"
+    assert {tag["name"] for tag in fetched["tech_tags"]} == {"React", "Flask"}
+
+
 def test_owner_can_delete_their_own_project(client, user_a):
     user, token = user_a
     project = _create_project(client, token)

@@ -21,6 +21,7 @@ import NotFound from './pages/NotFound.jsx'
 import AIAssistant from './components/assistant/AIAssistant.jsx'
 import RequireAdmin from './components/RequireAdmin.jsx'
 import { selectAuthToken, selectAuthUser, fetchCurrentUser } from './features/auth/authSlice.js'
+import { fetchProjects } from './features/projects/projectsSlice.js'
 
 function App() {
   const dispatch = useDispatch()
@@ -33,6 +34,10 @@ function App() {
   useEffect(() => {
     if (token && !authUser) dispatch(fetchCurrentUser())
   }, [token, authUser, dispatch])
+
+  useEffect(() => {
+    dispatch(fetchProjects())
+  }, [dispatch])
 
   return (
     <>
