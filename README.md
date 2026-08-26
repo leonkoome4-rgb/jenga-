@@ -132,6 +132,15 @@ cp deploy.env.example .env
 docker compose up --build -d
 ```
 
+If a Docker build fails because the machine ran out of space, remove only
+Docker's unused build cache and retry (this preserves the `postgres_data`
+database volume):
+
+```bash
+docker builder prune -af
+docker compose up --build -d
+```
+
 The application is then available on port `8080`. Put it behind an HTTPS
 reverse proxy or deploy the three services to a container host that provides
 TLS. The backend runs Alembic migrations automatically on startup and the
