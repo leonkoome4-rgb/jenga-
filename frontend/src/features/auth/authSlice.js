@@ -2,10 +2,41 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { api } from '../../api/client.js'
 
 const TOKEN_STORAGE_KEY = 'tawi_auth_token'
+const LOCAL_USER_STORAGE_KEY = 'tawi_auth_local_user'
+
+// A client-side-only login path for demoing the app when there's no live
+// backend to authenticate against (e.g. the frontend deployed alone on
+// Vercel). This is NOT real security -- these credentials ship in the
+// public JS bundle and anyone can read them out of it. It's only safe
+// because this deployment mode has no real backend and no real data behind
+// it. Remove this once a real backend is hosted somewhere.
+export const LOCAL_SESSION_TOKEN = 'local-admin-session'
+const DEMO_ADMIN_PASSWORD = '123456678910'
+const DEMO_ADMINS = [
+  { name: 'Leon Koome', email: 'leon.koome@student.moringaschool.com' },
+  { name: 'Jason Mwangi', email: 'jason.mwangi@student.moringaschool.com' },
+  { name: 'Nabil Hassan', email: 'nabil.hassan@student.moringaschool.com' },
+  { name: 'Densinela Chepngetich', email: 'densinela.chepngetich@student.moringaschool.com' },
+]
+
+export function findDemoAdmin(email, password) {
+  if (password !== DEMO_ADMIN_PASSWORD) return null
+  const normalized = (email || '').trim().toLowerCase()
+  return DEMO_ADMINS.find((a) => a.email === normalized) || null
+}
 
 const loadStoredToken = () => {
   try {
     return localStorage.getItem(TOKEN_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+const loadStoredLocalUser = () => {
+  try {
+    const raw = localStorage.getItem(LOCAL_USER_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
   } catch {
     return null
   }
@@ -19,9 +50,18 @@ const storeToken = (token) => {
   }
 }
 
+const storeLocalUser = (user) => {
+  try {
+    localStorage.setItem(LOCAL_USER_STORAGE_KEY, JSON.stringify(user))
+  } catch {
+    // ignore
+  }
+}
+
 const clearStoredToken = () => {
   try {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
+    localStorage.removeItem(LOCAL_USER_STORAGE_KEY)
   } catch {
     // ignore
   }
@@ -33,7 +73,7 @@ export const registerUser = createAsyncThunk(
     try {
       return await api.post('/api/auth/register', payload)
     } catch (err) {
-      return rejectWithValue(err.data?.error || err.message)
+      return rejectWithValue({ status: err.status, message: err.data?.error || err.message })
     }
   },
 )
@@ -44,7 +84,7 @@ export const loginUser = createAsyncThunk(
     try {
       return await api.post('/api/auth/login', payload)
     } catch (err) {
-      return rejectWithValue(err.data?.error || err.message)
+      return rejectWithValue({ status: err.status, message: err.data?.error || err.message })
     }
   },
 )
@@ -62,9 +102,11 @@ export const fetchCurrentUser = createAsyncThunk(
   },
 )
 
+const initialToken = loadStoredToken()
+
 const initialState = {
-  token: loadStoredToken(),
-  user: null,
+  token: initialToken,
+  user: initialToken === LOCAL_SESSION_TOKEN ? loadStoredLocalUser() : null,
   status: 'idle',
   error: null,
 }
@@ -83,6 +125,27 @@ const authSlice = createSlice({
     authErrorCleared(state) {
       state.error = null
     },
+    localAdminLoggedIn(state, action) {
+      const { name, email } = action.payload
+      const user = {
+        id: `local-${email}`,
+        name,
+        email,
+        role: 'admin',
+        cohort_id: null,
+        cohort_name: 'Group 6',
+        bio: null,
+        github_url: null,
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+      }
+      state.token = LOCAL_SESSION_TOKEN
+      state.user = user
+      state.status = 'succeeded'
+      state.error = null
+      storeToken(LOCAL_SESSION_TOKEN)
+      storeLocalUser(user)
+    },
   },
   extraReducers(builder) {
     const handlePending = (state) => {
@@ -97,7 +160,7 @@ const authSlice = createSlice({
     }
     const handleRejected = (state, action) => {
       state.status = 'failed'
-      state.error = action.payload || 'Something went wrong'
+      state.error = action.payload?.message || 'Something went wrong'
     }
 
     builder
@@ -124,7 +187,7 @@ const authSlice = createSlice({
   },
 })
 
-export const { loggedOut, authErrorCleared } = authSlice.actions
+export const { loggedOut, authErrorCleared, localAdminLoggedIn } = authSlice.actions
 
 export default authSlice.reducer
 

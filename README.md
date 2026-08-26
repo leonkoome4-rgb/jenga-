@@ -60,6 +60,30 @@ dev. Get real keys at https://dash.cloudflare.com/?to=/:account/turnstile for
 production — the secret key must only ever live in the backend `.env`, never
 in frontend code or `VITE_`-prefixed vars.
 
+### Deploying the backend (Render)
+
+`backend/render.yaml` is a Blueprint that provisions both the web service and
+a free Postgres database in one go:
+
+1. Push this repo to GitHub (already done if you're reading this from there).
+2. On [Render](https://dashboard.render.com), click **New → Blueprint** and
+   point it at this repo. Render reads `backend/render.yaml` automatically.
+3. It'll ask for two secrets it can't infer on its own — `JWT_SECRET_KEY`
+   (generate one with `openssl rand -hex 32`) and `AI_API_KEY` (your Groq
+   key). Everything else (`DATABASE_URL`, `TURNSTILE_*`, `AI_MODEL`) is
+   already filled in.
+4. Deploy. The build step runs `flask db upgrade` and `python seed.py`
+   automatically, so the schema and the Group 6 admin accounts are ready the
+   moment it's live.
+5. Copy the resulting service URL (`https://tawi-backend-xxxx.onrender.com`)
+   into the frontend's `VITE_API_URL` and redeploy the frontend.
+
+The free Postgres plan expires after 30 days — fine for a demo, upgrade the
+database plan on Render's dashboard if this needs to stay up longer. The
+Turnstile keys baked into `render.yaml` are Cloudflare's published
+*always-passes* test keypair; swap them for real ones (see above) before
+opening this up to real users instead of a demo audience.
+
 ## Frontend
 
 ```bash
@@ -69,7 +93,13 @@ cp .env.example .env   # VITE_API_URL, VITE_TURNSTILE_SITE_KEY
 npm run dev   # http://localhost:5173
 ```
 
-Deployed via Vercel with root directory set to `frontend/`.
+Deployed via Vercel. **Important**: the project's dashboard Root Directory
+setting must be `frontend`, not `.` (the repo root) — otherwise Vercel's
+auto-deploy-on-push runs `npm install`/`vite build` from a directory with no
+`package.json` and fails instantly with `vite: command not found`. Set it
+under Project Settings → General → Root Directory. Until that's set
+correctly, auto-deploy on push will keep silently failing; deploy manually
+in the meantime with `vercel --prod` from inside `frontend/`.
 
 ## Screens
 

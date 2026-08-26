@@ -18,7 +18,11 @@ export function useAITool(endpoint) {
       setStatus('succeeded')
       return data.result
     } catch (err) {
-      setError(err.data?.error || err.message)
+      const friendlyMessage =
+        err.status === 0
+          ? "AI features aren't available in this preview right now. Please try again later."
+          : err.data?.error || err.message
+      setError(friendlyMessage)
       setStatus('failed')
       return null
     }

@@ -5,7 +5,14 @@ import { AlertCircle } from 'lucide-react'
 import AuthLayout from '../layouts/AuthLayout.jsx'
 import Button from '../components/Button.jsx'
 import TurnstileWidget from '../components/TurnstileWidget.jsx'
-import { loginUser, selectAuthStatus, selectAuthError, authErrorCleared } from '../features/auth/authSlice.js'
+import {
+  loginUser,
+  selectAuthStatus,
+  selectAuthError,
+  authErrorCleared,
+  findDemoAdmin,
+  localAdminLoggedIn,
+} from '../features/auth/authSlice.js'
 
 const inputClasses =
   'w-full rounded-xl border border-border bg-white px-4 py-2.5 text-[14px] text-navy placeholder:text-text-muted focus:outline-none focus:border-orange'
@@ -21,6 +28,8 @@ export default function Login() {
   const [captchaToken, setCaptchaToken] = useState(null)
   const [captchaKey, setCaptchaKey] = useState(0)
 
+  const demoAdmin = findDemoAdmin(email, password)
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     dispatch(authErrorCleared())
@@ -29,10 +38,21 @@ export default function Login() {
 
     if (loginUser.fulfilled.match(result)) {
       navigate('/ai-hub')
-    } else {
-      setCaptchaToken(null)
-      setCaptchaKey((k) => k + 1)
+      return
     }
+
+    // Only fall back to the local demo session when there's genuinely no
+    // backend to talk to (e.g. this is the frontend-only deployed preview).
+    // A real backend must always win so real accounts get a real token --
+    // otherwise AI Hub calls would carry a fake token and get rejected.
+    if (result.payload?.status === 0 && demoAdmin) {
+      dispatch(localAdminLoggedIn(demoAdmin))
+      navigate('/discover')
+      return
+    }
+
+    setCaptchaToken(null)
+    setCaptchaKey((k) => k + 1)
   }
 
   return (
