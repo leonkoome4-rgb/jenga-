@@ -23,7 +23,8 @@ async function request(path, { method = 'GET', body, token } = {}) {
       body: body !== undefined ? JSON.stringify(body) : undefined,
     })
   } catch {
-    throw new ApiError('Could not reach the server. Is the backend running?', 0, null)
+    const endpoint = API_URL || window.location.origin
+    throw new ApiError(`Could not reach the API at ${endpoint}/api. Open the local app at http://127.0.0.1:5173.`, 0, null)
   }
 
   const data = await response.json().catch(() => ({}))

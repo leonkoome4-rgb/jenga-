@@ -160,7 +160,7 @@ const authSlice = createSlice({
     }
     const handleRejected = (state, action) => {
       state.status = 'failed'
-      state.error = action.payload?.message || 'Something went wrong'
+      state.error = action.payload?.message || action.error?.message || 'Account creation failed. Please try again.'
     }
 
     builder
