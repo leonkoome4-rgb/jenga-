@@ -1,26 +1,26 @@
 from flask import Blueprint, request, jsonify
 from app.extensions import db
-from app.models import HelpPost, HelpComment
+from app.models import SosPost, SosComment
 from app.utils.decorators import require_owner, get_current_user
 
-bp = Blueprint("help", __name__, url_prefix="/api/help")
+bp = Blueprint("sos", __name__, url_prefix="/api/sos")
 
 MEDIA_TYPES = {"video", "image", "none"}
 
 
-def _help_post_owner_id(post_id):
-    post = db.session.get(HelpPost, post_id)
+def _sos_post_owner_id(post_id):
+    post = db.session.get(SosPost, post_id)
     return post.user_id if post else None
 
 
 @bp.get("")
-def list_help_posts():
-    posts = HelpPost.query.order_by(HelpPost.created_at.desc()).all()
-    return jsonify({"success": True, "help_posts": [p.to_dict() for p in posts]})
+def list_sos_posts():
+    posts = SosPost.query.order_by(SosPost.created_at.desc()).all()
+    return jsonify({"success": True, "sos_posts": [p.to_dict() for p in posts]})
 
 
 @bp.post("")
-def create_help_post():
+def create_sos_post():
     current_user = get_current_user()
     data = request.get_json(silent=True) or {}
 
@@ -36,7 +36,7 @@ def create_help_post():
     if media_type != "none" and not media_url:
         return jsonify({"success": False, "error": "media_url is required when media_type is set"}), 400
 
-    post = HelpPost(
+    post = SosPost(
         user_id=current_user.id,
         question=question,
         media_type=media_type,
@@ -45,43 +45,43 @@ def create_help_post():
     db.session.add(post)
     db.session.commit()
 
-    return jsonify({"success": True, "help_post": post.to_dict()}), 201
+    return jsonify({"success": True, "sos_post": post.to_dict()}), 201
 
 
 @bp.get("/<int:post_id>")
-def get_help_post(post_id):
-    post = db.session.get(HelpPost, post_id)
+def get_sos_post(post_id):
+    post = db.session.get(SosPost, post_id)
     if not post:
         return jsonify({"success": False, "error": "Not found"}), 404
-    return jsonify({"success": True, "help_post": post.to_dict(detailed=True)})
+    return jsonify({"success": True, "sos_post": post.to_dict(detailed=True)})
 
 
 @bp.patch("/<int:post_id>")
-@require_owner(_help_post_owner_id)
-def update_help_post(post_id):
-    post = db.session.get(HelpPost, post_id)
+@require_owner(_sos_post_owner_id)
+def update_sos_post(post_id):
+    post = db.session.get(SosPost, post_id)
     data = request.get_json(silent=True) or {}
 
     if "resolved" in data:
         post.resolved = bool(data["resolved"])
 
     db.session.commit()
-    return jsonify({"success": True, "help_post": post.to_dict(detailed=True)})
+    return jsonify({"success": True, "sos_post": post.to_dict(detailed=True)})
 
 
 @bp.delete("/<int:post_id>")
-@require_owner(_help_post_owner_id)
-def delete_help_post(post_id):
-    post = db.session.get(HelpPost, post_id)
+@require_owner(_sos_post_owner_id)
+def delete_sos_post(post_id):
+    post = db.session.get(SosPost, post_id)
     db.session.delete(post)
     db.session.commit()
     return jsonify({"success": True})
 
 
 @bp.post("/<int:post_id>/comments")
-def add_help_comment(post_id):
+def add_sos_comment(post_id):
     current_user = get_current_user()
-    post = db.session.get(HelpPost, post_id)
+    post = db.session.get(SosPost, post_id)
     if not post:
         return jsonify({"success": False, "error": "Not found"}), 404
 
@@ -90,7 +90,7 @@ def add_help_comment(post_id):
     if not body:
         return jsonify({"success": False, "error": "body is required"}), 400
 
-    comment = HelpComment(help_post_id=post.id, user_id=current_user.id, body=body)
+    comment = SosComment(sos_post_id=post.id, user_id=current_user.id, body=body)
     db.session.add(comment)
     db.session.commit()
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { AlertCircle, Video, Image as ImageIcon, FileText } from 'lucide-react'
 import Button from '../components/Button.jsx'
-import { createHelpPost } from '../features/help/helpSlice.js'
+import { createSosPost } from '../features/sos/sosSlice.js'
 import { selectAuthToken } from '../features/auth/authSlice.js'
 
 const inputClasses =
@@ -15,7 +15,7 @@ const MEDIA_OPTIONS = [
   { id: 'image', label: 'Screenshot', icon: ImageIcon },
 ]
 
-export default function AskForHelp() {
+export default function PostSos() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const token = useSelector(selectAuthToken)
@@ -39,7 +39,7 @@ export default function AskForHelp() {
     setSubmitting(true)
     setError('')
     const result = await dispatch(
-      createHelpPost({
+      createSosPost({
         question: question.trim(),
         media_type: mediaType,
         media_url: mediaType === 'none' ? null : mediaUrl.trim(),
@@ -47,8 +47,8 @@ export default function AskForHelp() {
     )
     setSubmitting(false)
 
-    if (createHelpPost.fulfilled.match(result)) {
-      navigate(`/help/${result.payload.id}`)
+    if (createSosPost.fulfilled.match(result)) {
+      navigate(`/sos/${result.payload.id}`)
     } else {
       setError(result.payload || 'Could not post your problem. Please try again.')
     }

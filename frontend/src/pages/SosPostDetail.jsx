@@ -5,30 +5,30 @@ import { CheckCircle2, Send } from 'lucide-react'
 import Avatar from '../components/Avatar.jsx'
 import Button from '../components/Button.jsx'
 import {
-  fetchHelpPost,
-  addHelpComment,
-  resolveHelpPost,
-  selectCurrentHelpPost,
-  selectCurrentHelpPostStatus,
-} from '../features/help/helpSlice.js'
+  fetchSosPost,
+  addSosComment,
+  resolveSosPost,
+  selectCurrentSosPost,
+  selectCurrentSosPostStatus,
+} from '../features/sos/sosSlice.js'
 import { selectAuthUser, selectIsAuthenticated } from '../features/auth/authSlice.js'
 
-export default function HelpPostDetail() {
+export default function SosPostDetail() {
   const { id } = useParams()
   const dispatch = useDispatch()
-  const post = useSelector(selectCurrentHelpPost)
-  const status = useSelector(selectCurrentHelpPostStatus)
+  const post = useSelector(selectCurrentSosPost)
+  const status = useSelector(selectCurrentSosPostStatus)
   const authUser = useSelector(selectAuthUser)
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const [comment, setComment] = useState('')
   const [posting, setPosting] = useState(false)
 
   useEffect(() => {
-    dispatch(fetchHelpPost(id))
+    dispatch(fetchSosPost(id))
   }, [id, dispatch])
 
   if (status === 'failed') {
-    return <Navigate to="/help" replace />
+    return <Navigate to="/sos" replace />
   }
 
   if (!post) {
@@ -42,8 +42,8 @@ export default function HelpPostDetail() {
     const body = comment.trim()
     if (!body || posting) return
     setPosting(true)
-    const result = await dispatch(addHelpComment({ postId: post.id, body }))
-    if (addHelpComment.fulfilled.match(result)) setComment('')
+    const result = await dispatch(addSosComment({ postId: post.id, body }))
+    if (addSosComment.fulfilled.match(result)) setComment('')
     setPosting(false)
   }
 
@@ -80,7 +80,7 @@ export default function HelpPostDetail() {
         <Button
           variant="secondary"
           className="mt-4 px-4 py-2 text-[13px]"
-          onClick={() => dispatch(resolveHelpPost(post.id))}
+          onClick={() => dispatch(resolveSosPost(post.id))}
         >
           <CheckCircle2 size={14} strokeWidth={1.75} />
           Mark as solved
@@ -119,7 +119,7 @@ export default function HelpPostDetail() {
               type="submit"
               disabled={!comment.trim() || posting}
               aria-label="Reply"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange text-white disabled:opacity-40"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange text-white disabled:opacity-40"
             >
               <Send size={16} strokeWidth={2} />
             </button>

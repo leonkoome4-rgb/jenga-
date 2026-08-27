@@ -71,11 +71,13 @@ responses and attribute `AI_HISTORY` when present. Since there's no login to
 hold accountable for volume, every `/api/ai/*` route is rate-limited by IP
 (40 requests / 10 minutes, `app/utils/rate_limit.py`).
 
-### Help (problem-solving)
+### SOS (problem-solving)
 
-Anyone can browse `/help`; posting a problem (text, or a video/image URL) and
-commenting both require login (`app/routes/help.py`, `HelpPost`/`HelpComment`
-models). The original poster can mark their own post resolved.
+Anyone can browse `/sos`; posting a problem (text, or a video/image URL) and
+commenting both require login (`app/routes/sos.py`, `SosPost`/`SosComment`
+models). The original poster can mark their own post resolved. Seeded with
+real-life software dev problems (see `seed.py`) so there's something to
+browse from the start.
 
 ### Google Sign-In
 
@@ -103,27 +105,28 @@ dev. Get real keys at https://dash.cloudflare.com/?to=/:account/turnstile for
 production — the secret key must only ever live in the backend `.env`, never
 in frontend code or `VITE_`-prefixed vars.
 
-### Deploying the backend (Render)
+### Deploying the backend (Render + Neon)
 
-`backend/render.yaml` is a Blueprint that provisions both the web service and
-a free Postgres database in one go:
+`backend/render.yaml` is a Blueprint for the web service. The database is
+[Neon](https://neon.tech) rather than Render's own Postgres, since Render's
+free database expires after 30 days and Neon's free tier doesn't.
 
 1. Push this repo to GitHub (already done if you're reading this from there).
-2. On [Render](https://dashboard.render.com), click **New → Blueprint** and
+2. Create a free Neon project at https://neon.tech and copy its connection
+   string (looks like `postgresql://user:pass@ep-xxxx.aws.neon.tech/neondb?sslmode=require`).
+3. On [Render](https://dashboard.render.com), click **New → Blueprint** and
    point it at this repo. Render reads `backend/render.yaml` automatically.
-3. It'll ask for two secrets it can't infer on its own — `JWT_SECRET_KEY`
-   (generate one with `openssl rand -hex 32`) and `AI_API_KEY` (your Groq
-   key). Everything else (`DATABASE_URL`, `TURNSTILE_*`, `AI_MODEL`) is
-   already filled in.
-4. Deploy. The build step runs `flask db upgrade` and `python seed.py`
-   automatically, so the schema and the Group 6 admin accounts are ready the
-   moment it's live.
-5. Copy the resulting service URL (`https://tawi-backend-xxxx.onrender.com`)
+4. It'll ask for three secrets it can't infer on its own — `DATABASE_URL`
+   (the Neon connection string from step 2), `JWT_SECRET_KEY` (generate one
+   with `openssl rand -hex 32`), and `AI_API_KEY` (your Groq key). Everything
+   else (`TURNSTILE_*`, `AI_MODEL`) is already filled in.
+5. Deploy. The build step runs `flask db upgrade` and `python seed.py`
+   automatically, so the schema, the Group 6 admin accounts, and the demo
+   projects/SOS posts are ready the moment it's live.
+6. Copy the resulting service URL (`https://tawi-backend-xxxx.onrender.com`)
    into the frontend's `VITE_API_URL` and redeploy the frontend.
 
-The free Postgres plan expires after 30 days — fine for a demo, upgrade the
-database plan on Render's dashboard if this needs to stay up longer. The
-Turnstile keys baked into `render.yaml` are Cloudflare's published
+The Turnstile keys baked into `render.yaml` are Cloudflare's published
 *always-passes* test keypair; swap them for real ones (see above) before
 opening this up to real users instead of a demo audience.
 
@@ -149,8 +152,8 @@ found` — that was silently broken for a while before this file was added.
 Two ways to run the full stack (frontend + backend + database) somewhere
 real:
 
-**Render** — `backend/render.yaml` is a Blueprint that provisions the API and
-a free Postgres database in one step; see "Deploying the backend" above for
+**Render + Neon** — `backend/render.yaml` is a Blueprint for the API, paired
+with a free Neon Postgres database; see "Deploying the backend" above for
 the exact steps. Pair it with the Vercel frontend deploy above by setting
 `VITE_API_URL` to the Render service's URL.
 
@@ -194,5 +197,5 @@ URL.
 - **Profile** (`/profile`, `/creators/:id`) — a student's builds, stats, and skills
 - **Add project** (`/add-project`) — publish a build with image/video, tech stack, team
 - **AI Hub** (`/ai-hub`) — categorize, describe, tag, skill-gap, team-match, README, debug
-- **Help** (`/help`, `/help/new`, `/help/:id`) — post a problem (text/video/image) and get help from other builders
+- **SOS** (`/sos`, `/sos/new`, `/sos/:id`) — post a real coding problem (text/video/image) and get help from other builders
 - **Admin** (`/admin`, `/admin/cohorts`) — manage projects and cohorts

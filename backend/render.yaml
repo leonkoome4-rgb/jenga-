@@ -1,9 +1,3 @@
-databases:
-  - name: tawi-db
-    plan: free
-    databaseName: tawi
-    user: tawi
-
 services:
   - type: web
     name: tawi-backend
@@ -15,10 +9,11 @@ services:
     envVars:
       - key: FLASK_APP
         value: run.py
+      # Paste your Neon (or other Postgres) connection string here during
+      # setup -- using Neon instead of Render's own Postgres because
+      # Render's free database expires after 30 days and Neon's doesn't.
       - key: DATABASE_URL
-        fromDatabase:
-          name: tawi-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET_KEY
         sync: false
       - key: AI_API_KEY

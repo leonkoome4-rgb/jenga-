@@ -4,7 +4,7 @@ load_dotenv()
 
 from app import create_app
 from app.extensions import db
-from app.models import Cohort, Category, TechTag, User, Project, ProjectMember
+from app.models import Cohort, Category, TechTag, User, Project, ProjectMember, SosPost, SosComment
 
 app = create_app()
 
@@ -134,6 +134,114 @@ DEMO_PROJECTS = [
     ),
 ]
 
+# Real-life problems students actually hit, so /sos has something worth
+# browsing on day one instead of an empty feed.
+SOS_POSTS = [
+    dict(
+        author="Diego Ramirez", resolved=True,
+        question="My React app gets \"blocked by CORS policy\" when I call my Flask API from the "
+                 "browser, but the exact same request works fine in Postman. What am I missing?",
+        media_type="none", media_url=None,
+        comments=[
+            ("Amara Chen", "Postman doesn't enforce CORS at all -- it's a browser-only security "
+                            "rule, so this is expected. Add flask-cors and set the allowed origin "
+                            "to your actual frontend URL, not '*', if you're sending credentials."),
+            ("Jordan Lee", "Also double check you're not accidentally calling http:// when your "
+                            "frontend is on https://, or vice versa -- that counts as a different "
+                            "origin too."),
+        ],
+    ),
+    dict(
+        author="Hana Kobayashi", resolved=False,
+        question="console.log() right after calling setState still shows the OLD value. Is "
+                 "React broken, or am I missing something obvious?",
+        media_type="none", media_url=None,
+        comments=[
+            ("Sofia Petrov", "Not broken -- state updates are asynchronous and batched. Your "
+                              "log runs before the re-render happens. Move the log into a "
+                              "useEffect that watches that piece of state instead."),
+        ],
+    ),
+    dict(
+        author="Marcus Webb", resolved=True,
+        question="npm install fails with ERESOLVE and a wall of peer dependency errors. Worked "
+                 "fine on my last project with the same packages.",
+        media_type="none", media_url=None,
+        comments=[
+            ("Priya Nair", "Usually means two packages want incompatible versions of the same "
+                            "dependency. `npm install --legacy-peer-deps` gets you unblocked, but "
+                            "it's worth checking package.json for a version mismatch first."),
+            ("Elena Volkov", "If it keeps happening across projects, might be worth switching to "
+                              "pnpm -- its resolution errors are usually a lot more readable."),
+        ],
+    ),
+    dict(
+        author="Elena Volkov", resolved=False,
+        question="My Flask API returns a plain 500 with zero detail once it's deployed, but "
+                 "works perfectly on localhost. How do I even find out what's failing?",
+        media_type="none", media_url=None,
+        comments=[
+            ("Jordan Lee", "FLASK_DEBUG=True locally would've shown you the traceback -- try "
+                            "reproducing it that way first. In production, check your host's log "
+                            "output (Render/Railway both stream logs) instead of the response body."),
+            ("Amara Chen", "Also a classic cause: an env var that's set locally but not on the "
+                            "deployed host, so something like the DB URL or API key comes back "
+                            "None and blows up downstream."),
+        ],
+    ),
+    dict(
+        author="Priya Nair", resolved=False,
+        question="Flexbox items center perfectly on desktop but stack weirdly and overflow on "
+                 "mobile. Screenshot attached.",
+        media_type="image",
+        media_url="https://cdn.pixabay.com/photo/2017/08/10/08/47/laptop-2620118_640.jpg",
+        comments=[
+            ("Sofia Petrov", "Looks like a min-width issue -- a flex child without min-width: 0 "
+                              "won't shrink below its content size, so it forces the row to "
+                              "overflow instead of wrapping."),
+        ],
+    ),
+    dict(
+        author="Amara Chen", resolved=True,
+        question="Users stay 'logged in' in the UI even after their JWT expires -- API calls "
+                 "start failing with 401 but nothing redirects them to login.",
+        media_type="none", media_url=None,
+        comments=[
+            ("Diego Ramirez", "You need a global check: catch 401s in your fetch wrapper and "
+                               "clear the stored token + redirect there, rather than handling it "
+                               "per-component."),
+            ("Hana Kobayashi", "This bit us too -- also worth NOT wiping the session on every "
+                                "failure, only on a real 401, otherwise a flaky connection logs "
+                                "people out for no reason."),
+        ],
+    ),
+    dict(
+        author="Sofia Petrov", resolved=False,
+        question="ModuleNotFoundError even though I definitely ran pip install inside my venv. "
+                 "Losing my mind a little.",
+        media_type="none", media_url=None,
+        comments=[
+            ("Marcus Webb", "Run `which python` and `which pip` -- if they don't both point "
+                             "inside your venv folder, you installed into a different Python than "
+                             "the one running your script."),
+        ],
+    ),
+    dict(
+        author="Jordan Lee", resolved=False,
+        question="Git keeps giving me merge conflicts every time I push, and I don't understand "
+                 "what the <<<<<<<, =======, >>>>>>> markers actually mean.",
+        media_type="video",
+        media_url="https://cdn.pixabay.com/video/2020/02/12/32046-390511322_medium.mp4",
+        comments=[
+            ("Elena Volkov", "Everything between <<<<<<< HEAD and ======= is your version; "
+                              "everything between ======= and >>>>>>> is theirs. Delete the "
+                              "markers and keep/merge the lines you actually want, then commit."),
+            ("Priya Nair", "`git pull` before you start working each day cuts down on how often "
+                            "this happens in the first place."),
+        ],
+    ),
+]
+
 with app.app_context():
     for name in COHORTS:
         if not Cohort.query.filter_by(name=name).first():
@@ -207,6 +315,34 @@ with app.app_context():
         projects_created += 1
 
     db.session.commit()
+
+    sos_posts_created = 0
+    if SosPost.query.count() == 0:
+        for p in SOS_POSTS:
+            author = User.query.filter_by(name=p["author"]).first()
+            if not author:
+                continue
+
+            post = SosPost(
+                user_id=author.id,
+                question=p["question"],
+                media_type=p["media_type"],
+                media_url=p["media_url"],
+                resolved=p["resolved"],
+            )
+            db.session.add(post)
+            db.session.flush()
+
+            for commenter_name, body in p["comments"]:
+                commenter = User.query.filter_by(name=commenter_name).first()
+                if not commenter:
+                    continue
+                db.session.add(SosComment(sos_post_id=post.id, user_id=commenter.id, body=body))
+
+            sos_posts_created += 1
+
+    db.session.commit()
     print(f"Seeded {Cohort.query.count()} cohorts, {Category.query.count()} categories, "
           f"{TechTag.query.count()} tech tags, {admins_created} new admin account(s), "
-          f"{users_created} new demo user(s), {projects_created} new demo project(s).")
+          f"{users_created} new demo user(s), {projects_created} new demo project(s), "
+          f"{sos_posts_created} new SOS post(s).")

@@ -1,43 +1,43 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { api } from '../../api/client.js'
 
-export const fetchHelpPosts = createAsyncThunk('help/fetchAll', async (_, { rejectWithValue }) => {
+export const fetchSosPosts = createAsyncThunk('sos/fetchAll', async (_, { rejectWithValue }) => {
   try {
-    const data = await api.get('/api/help')
-    return data.help_posts
+    const data = await api.get('/api/sos')
+    return data.sos_posts
   } catch (err) {
     return rejectWithValue(err.data?.error || err.message)
   }
 })
 
-export const fetchHelpPost = createAsyncThunk('help/fetchOne', async (id, { rejectWithValue }) => {
+export const fetchSosPost = createAsyncThunk('sos/fetchOne', async (id, { rejectWithValue }) => {
   try {
-    const data = await api.get(`/api/help/${id}`)
-    return data.help_post
+    const data = await api.get(`/api/sos/${id}`)
+    return data.sos_post
   } catch (err) {
     return rejectWithValue(err.data?.error || err.message)
   }
 })
 
-export const createHelpPost = createAsyncThunk(
-  'help/create',
+export const createSosPost = createAsyncThunk(
+  'sos/create',
   async (payload, { rejectWithValue, getState }) => {
     try {
       const { token } = getState().auth
-      const data = await api.post('/api/help', payload, { token })
-      return data.help_post
+      const data = await api.post('/api/sos', payload, { token })
+      return data.sos_post
     } catch (err) {
       return rejectWithValue(err.data?.error || err.message)
     }
   },
 )
 
-export const addHelpComment = createAsyncThunk(
-  'help/addComment',
+export const addSosComment = createAsyncThunk(
+  'sos/addComment',
   async ({ postId, body }, { rejectWithValue, getState }) => {
     try {
       const { token } = getState().auth
-      const data = await api.post(`/api/help/${postId}/comments`, { body }, { token })
+      const data = await api.post(`/api/sos/${postId}/comments`, { body }, { token })
       return { postId, comment: data.comment }
     } catch (err) {
       return rejectWithValue(err.data?.error || err.message)
@@ -45,13 +45,13 @@ export const addHelpComment = createAsyncThunk(
   },
 )
 
-export const resolveHelpPost = createAsyncThunk(
-  'help/resolve',
+export const resolveSosPost = createAsyncThunk(
+  'sos/resolve',
   async (postId, { rejectWithValue, getState }) => {
     try {
       const { token } = getState().auth
-      const data = await api.patch(`/api/help/${postId}`, { resolved: true }, { token })
-      return data.help_post
+      const data = await api.patch(`/api/sos/${postId}`, { resolved: true }, { token })
+      return data.sos_post
     } catch (err) {
       return rejectWithValue(err.data?.error || err.message)
     }
@@ -65,43 +65,43 @@ const initialState = {
   currentStatus: 'idle',
 }
 
-const helpSlice = createSlice({
-  name: 'help',
+const sosSlice = createSlice({
+  name: 'sos',
   initialState,
   reducers: {},
   extraReducers(builder) {
     builder
-      .addCase(fetchHelpPosts.pending, (state) => {
+      .addCase(fetchSosPosts.pending, (state) => {
         state.status = 'loading'
       })
-      .addCase(fetchHelpPosts.fulfilled, (state, action) => {
+      .addCase(fetchSosPosts.fulfilled, (state, action) => {
         state.status = 'succeeded'
         state.items = action.payload
       })
-      .addCase(fetchHelpPosts.rejected, (state) => {
+      .addCase(fetchSosPosts.rejected, (state) => {
         state.status = 'failed'
       })
-      .addCase(createHelpPost.fulfilled, (state, action) => {
+      .addCase(createSosPost.fulfilled, (state, action) => {
         state.items.unshift(action.payload)
       })
-      .addCase(fetchHelpPost.pending, (state) => {
+      .addCase(fetchSosPost.pending, (state) => {
         state.currentStatus = 'loading'
       })
-      .addCase(fetchHelpPost.fulfilled, (state, action) => {
+      .addCase(fetchSosPost.fulfilled, (state, action) => {
         state.currentStatus = 'succeeded'
         state.current = action.payload
       })
-      .addCase(fetchHelpPost.rejected, (state) => {
+      .addCase(fetchSosPost.rejected, (state) => {
         state.currentStatus = 'failed'
         state.current = null
       })
-      .addCase(addHelpComment.fulfilled, (state, action) => {
+      .addCase(addSosComment.fulfilled, (state, action) => {
         if (state.current?.id === action.payload.postId) {
           state.current.comments = [...(state.current.comments || []), action.payload.comment]
           state.current.comment_count = (state.current.comment_count || 0) + 1
         }
       })
-      .addCase(resolveHelpPost.fulfilled, (state, action) => {
+      .addCase(resolveSosPost.fulfilled, (state, action) => {
         if (state.current?.id === action.payload.id) {
           state.current.resolved = action.payload.resolved
         }
@@ -111,9 +111,9 @@ const helpSlice = createSlice({
   },
 })
 
-export default helpSlice.reducer
+export default sosSlice.reducer
 
-export const selectHelpPosts = (state) => state.help.items
-export const selectHelpPostsStatus = (state) => state.help.status
-export const selectCurrentHelpPost = (state) => state.help.current
-export const selectCurrentHelpPostStatus = (state) => state.help.currentStatus
+export const selectSosPosts = (state) => state.sos.items
+export const selectSosPostsStatus = (state) => state.sos.status
+export const selectCurrentSosPost = (state) => state.sos.current
+export const selectCurrentSosPostStatus = (state) => state.sos.currentStatus

@@ -8,8 +8,8 @@ from app.models.models import (
     Connection,
     AIHistory,
     PasswordResetToken,
-    HelpPost,
-    HelpComment,
+    SosPost,
+    SosComment,
 )
 
 __all__ = [
@@ -22,6 +22,6 @@ __all__ = [
     "Connection",
     "AIHistory",
     "PasswordResetToken",
-    "HelpPost",
-    "HelpComment",
+    "SosPost",
+    "SosComment",
 ]

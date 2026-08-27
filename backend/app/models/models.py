@@ -217,8 +217,8 @@ class AIHistory(db.Model):
         }
 
 
-class HelpPost(db.Model):
-    __tablename__ = "help_posts"
+class SosPost(db.Model):
+    __tablename__ = "sos_posts"
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
@@ -230,7 +230,7 @@ class HelpPost(db.Model):
 
     user = db.relationship("User")
     comments = db.relationship(
-        "HelpComment", back_populates="post", cascade="all, delete-orphan", order_by="HelpComment.created_at"
+        "SosComment", back_populates="post", cascade="all, delete-orphan", order_by="SosComment.created_at"
     )
 
     def to_dict(self, detailed=False):
@@ -249,16 +249,16 @@ class HelpPost(db.Model):
         return data
 
 
-class HelpComment(db.Model):
-    __tablename__ = "help_comments"
+class SosComment(db.Model):
+    __tablename__ = "sos_comments"
 
     id = db.Column(db.Integer, primary_key=True)
-    help_post_id = db.Column(db.Integer, db.ForeignKey("help_posts.id"), nullable=False)
+    sos_post_id = db.Column(db.Integer, db.ForeignKey("sos_posts.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
 
-    post = db.relationship("HelpPost", back_populates="comments")
+    post = db.relationship("SosPost", back_populates="comments")
     user = db.relationship("User")
 
     def to_dict(self):
