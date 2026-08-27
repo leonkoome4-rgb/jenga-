@@ -23,7 +23,7 @@ export default function MediaBackground({
         loop
         playsInline
         onError={() => setVideoFailed(true)}
-        className={`${className} object-cover`}
+        className={`${className} object-contain`}
       />
     )
   }
@@ -34,7 +34,7 @@ export default function MediaBackground({
         src={imageUrl}
         alt={name}
         onError={() => setImageFailed(true)}
-        className={`${className} object-cover`}
+        className={`${className} object-contain`}
       />
     )
   }

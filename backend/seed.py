@@ -143,7 +143,7 @@ LEON_PROJECTS = [
         name="Workforce Status & Payroll Console", owner="Leon Koome", members=["Leon Koome"],
         description="Full-stack internal HR and payroll system for a transport company -- employee lifecycle, daily status tracking, AES-256 encrypted bank details, leave management, and a compliance-grade audit log.",
         full_description="Full-stack internal HR and payroll system for a transport company -- employee lifecycle, daily status tracking, AES-256 encrypted bank details, leave management, and a compliance-grade audit log.",
-        image_url=None,
+        image_url="/leon-projects/hris-preview.jpg",
         video_url="/leon-projects/hris-preview.mp4",
         live_link=None,
         category="Web Dev", cohort="Group 6",
@@ -153,7 +153,7 @@ LEON_PROJECTS = [
         name="WhatsApp Creative Agency", owner="Leon Koome", members=["Leon Koome"],
         description="A WhatsApp bot that turns a text conversation into a finished job -- classifies each message, drafts a poster or freelancer quote via Claude, and routes approvals through Twilio.",
         full_description="A WhatsApp bot that turns a text conversation into a finished job. One webhook classifies each message as a simple poster request or a complex brief, drafts a Puppeteer-rendered poster or a freelancer quote via Claude, and routes approvals and freelancer notifications through Twilio -- all state lives in SQLite via Prisma. Currently runs against a local ngrok tunnel, not yet on a public server.",
-        image_url=None,
+        image_url="/leon-projects/whatsapp-agency-preview.jpg",
         video_url="/leon-projects/whatsapp-agency-preview.mp4",
         live_link=None,
         category="Web Dev", cohort="Group 6",
@@ -163,7 +163,7 @@ LEON_PROJECTS = [
         name="Super Metro -- Transport Website", owner="Leon Koome", members=["Leon Koome"],
         description="Full marketing and service site for Super Metro, a Nairobi bus SACCO with 500+ vehicles -- scroll-driven animations, live route maps, airport shuttle booking, and an incident-report flow.",
         full_description="Full marketing and service site for Super Metro, a Nairobi bus SACCO with 500+ vehicles. Includes scroll-driven animations, live route maps, airport shuttle booking, and an incident-report flow.",
-        image_url=None,
+        image_url="/leon-projects/super-metro-preview.jpg",
         video_url=None,
         live_link="https://super-metro-gb9k.vercel.app",
         category="Web Dev", cohort="Group 6",
@@ -173,7 +173,7 @@ LEON_PROJECTS = [
         name="Super Metro Insurance Agency", owner="Leon Koome", members=["Leon Koome"],
         description="Full-stack insurance agency site covering all 9 insurance classes with a 6-step motor quote wizard, real IRA-standard premium calculations, and M-Pesa Daraja STK Push payments.",
         full_description="Full-stack insurance agency site covering all 9 insurance classes with a 6-step motor quote wizard, real IRA-standard premium calculations, and Safaricom Daraja M-Pesa STK Push payments.",
-        image_url=None,
+        image_url="/leon-projects/super-metro-insurance-preview.jpg",
         video_url=None,
         live_link="https://insuarance-tau.vercel.app",
         category="Web Dev", cohort="Group 6",
@@ -183,34 +183,18 @@ LEON_PROJECTS = [
         name="Kikapu -- Group-Fund Platform for Chamas", owner="Leon Koome", members=["Leon Koome"],
         description="Full-stack platform for Kenyan chamas, emergency funds, weddings, and harambees -- six fund types on one flexible schema, M-Pesa contributions, and admin-approved member claims. Built with a 4-person team.",
         full_description="Full-stack platform for Kenyan chamas, emergency funds, weddings, matanga contributions, and harambees -- six fund types on one flexible schema, M-Pesa Daraja STK Push contributions, member claims with admin approval, and pluggable SMS/email notifications. Built with a 4-person team.",
-        image_url=None,
+        image_url="/leon-projects/kikapu-preview.jpg",
         video_url="/leon-projects/kikapu-preview.mp4",
         live_link="https://kikapu-kappa.vercel.app",
         category="Web Dev", cohort="Group 6",
         tech=["React", "Flask", "PostgreSQL", "JWT", "Daraja API", "Tailwind CSS"],
     ),
-    dict(
-        name="Report It -- Anonymous Misconduct Reporting", owner="Leon Koome", members=["Leon Koome"],
-        description="Anonymous reporting tool for organizations. Reporters get a one-time case code as their only credential, ever -- no accounts, no names. Evidence is stripped of metadata before storage.",
-        full_description="Anonymous reporting tool for organizations. Reporters get a one-time case code as their only credential, ever -- no accounts, no names. Evidence uploads are stripped of metadata before storage, with a token-gated admin dashboard for compliance to triage and respond. Runs in a self-contained demo mode.",
-        image_url=None,
-        video_url="/leon-projects/reportit-preview.mp4",
-        live_link="https://frontend-jet-alpha-59.vercel.app",
-        category="Web Dev", cohort="Group 6",
-        tech=["Next.js", "TypeScript", "Tailwind CSS"],
-    ),
-    dict(
-        name="RentTrack -- Payment-Collection Tracker", owner="Leon Koome", members=["Leon Koome"],
-        description="A live board for anyone who regularly collects money from a group -- landlords, schools, chamas. Payers log in with just a phone number and pay via M-Pesa STK Push.",
-        full_description="A live board for anyone who regularly collects money from a group -- landlords, schools, chamas. Payers log in with just a phone number and pay via M-Pesa STK Push; admins get a color-coded board, request payments, log cash/bank manually, and drill into any payer's history. One flexible Groups model covers rentals, school fees, chamas, and more, and overpayments cascade forward to cover future periods automatically.",
-        image_url=None,
-        video_url="/leon-projects/renttrack-preview.mp4",
-        live_link="https://rent-psi-roan.vercel.app/login",
-        category="Web Dev", cohort="Group 6",
-        tech=["React", "Node.js", "Express", "PostgreSQL", "Prisma", "Daraja API"],
-    ),
 ]
 DEMO_PROJECTS += LEON_PROJECTS
+REMOVED_PROJECT_NAMES = [
+    "Report It -- Anonymous Misconduct Reporting",
+    "RentTrack -- Payment-Collection Tracker",
+]
 
 # Real-life problems students actually hit, so /code-clinic has something worth
 # browsing on day one instead of an empty feed.
@@ -357,8 +341,21 @@ with app.app_context():
     db.session.commit()
 
     projects_created = 0
+    projects_updated = 0
     for p in DEMO_PROJECTS:
-        if Project.query.filter_by(name=p["name"]).first():
+        existing = Project.query.filter_by(name=p["name"]).first()
+        if existing:
+            # Leon's projects are real, curated content that gets refined
+            # over time (e.g. adding a preview image after the fact) -- keep
+            # them in sync on every seed run instead of only-ever-create.
+            if p in LEON_PROJECTS:
+                changed = False
+                for field in ("description", "full_description", "image_url", "video_url", "live_link"):
+                    if getattr(existing, field) != p.get(field):
+                        setattr(existing, field, p.get(field))
+                        changed = True
+                if changed:
+                    projects_updated += 1
             continue
 
         category = Category.query.filter_by(name=p["category"]).first()
@@ -396,6 +393,14 @@ with app.app_context():
 
     db.session.commit()
 
+    projects_removed = 0
+    for name in REMOVED_PROJECT_NAMES:
+        project = Project.query.filter_by(name=name).first()
+        if project:
+            db.session.delete(project)
+            projects_removed += 1
+    db.session.commit()
+
     code_clinic_posts_created = 0
     if CodeClinicPost.query.count() == 0:
         for p in CODE_CLINIC_POSTS:
@@ -424,5 +429,6 @@ with app.app_context():
     db.session.commit()
     print(f"Seeded {Cohort.query.count()} cohorts, {Category.query.count()} categories, "
           f"{TechTag.query.count()} tech tags, {admins_created} new admin account(s), "
-          f"{users_created} new demo user(s), {projects_created} new demo project(s), "
+          f"{users_created} new demo user(s), {projects_created} new demo project(s) "
+          f"({projects_updated} updated, {projects_removed} removed), "
           f"{code_clinic_posts_created} new Code Clinic post(s).")

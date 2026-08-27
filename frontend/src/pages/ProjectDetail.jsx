@@ -65,7 +65,7 @@ export default function ProjectDetail() {
         name={project.name}
         tint="#4FA3DC"
         iconSize={40}
-        className="aspect-video max-h-[360px] w-full rounded-2xl"
+        className="aspect-video max-h-[360px] w-full rounded-2xl bg-navy"
       />
 
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
