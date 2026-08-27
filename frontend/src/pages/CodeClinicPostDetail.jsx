@@ -5,30 +5,30 @@ import { CheckCircle2, Send } from 'lucide-react'
 import Avatar from '../components/Avatar.jsx'
 import Button from '../components/Button.jsx'
 import {
-  fetchSosPost,
-  addSosComment,
-  resolveSosPost,
-  selectCurrentSosPost,
-  selectCurrentSosPostStatus,
-} from '../features/sos/sosSlice.js'
+  fetchPost,
+  addComment,
+  resolvePost,
+  selectCurrentPost,
+  selectCurrentPostStatus,
+} from '../features/codeClinic/codeClinicSlice.js'
 import { selectAuthUser, selectIsAuthenticated } from '../features/auth/authSlice.js'
 
-export default function SosPostDetail() {
+export default function CodeClinicPostDetail() {
   const { id } = useParams()
   const dispatch = useDispatch()
-  const post = useSelector(selectCurrentSosPost)
-  const status = useSelector(selectCurrentSosPostStatus)
+  const post = useSelector(selectCurrentPost)
+  const status = useSelector(selectCurrentPostStatus)
   const authUser = useSelector(selectAuthUser)
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const [comment, setComment] = useState('')
   const [posting, setPosting] = useState(false)
 
   useEffect(() => {
-    dispatch(fetchSosPost(id))
+    dispatch(fetchPost(id))
   }, [id, dispatch])
 
   if (status === 'failed') {
-    return <Navigate to="/sos" replace />
+    return <Navigate to="/code-clinic" replace />
   }
 
   if (!post) {
@@ -42,8 +42,8 @@ export default function SosPostDetail() {
     const body = comment.trim()
     if (!body || posting) return
     setPosting(true)
-    const result = await dispatch(addSosComment({ postId: post.id, body }))
-    if (addSosComment.fulfilled.match(result)) setComment('')
+    const result = await dispatch(addComment({ postId: post.id, body }))
+    if (addComment.fulfilled.match(result)) setComment('')
     setPosting(false)
   }
 
@@ -80,7 +80,7 @@ export default function SosPostDetail() {
         <Button
           variant="secondary"
           className="mt-4 px-4 py-2 text-[13px]"
-          onClick={() => dispatch(resolveSosPost(post.id))}
+          onClick={() => dispatch(resolvePost(post.id))}
         >
           <CheckCircle2 size={14} strokeWidth={1.75} />
           Mark as solved

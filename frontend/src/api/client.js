@@ -11,20 +11,35 @@ class ApiError extends Error {
   }
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Free-tier hosts (Render, etc.) spin the backend down after inactivity and
+// take up to ~30-50s to wake back up on the next request, which otherwise
+// surfaces as a hard "can't reach the server" failure. Retry network-level
+// failures a couple of times with a short backoff before giving up.
+const RETRY_DELAYS_MS = [3000, 6000]
+
 async function request(path, { method = 'GET', body, token } = {}) {
   const headers = { 'Content-Type': 'application/json' }
   if (token) headers.Authorization = `Bearer ${token}`
 
   let response
-  try {
-    response = await fetch(`${API_URL}${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    })
-  } catch {
-    const endpoint = API_URL || window.location.origin
-    throw new ApiError(`Could not reach the API at ${endpoint}/api. Open the local app at http://127.0.0.1:5173.`, 0, null)
+  let attempt = 0
+  while (true) {
+    try {
+      response = await fetch(`${API_URL}${path}`, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      })
+      break
+    } catch {
+      if (attempt >= RETRY_DELAYS_MS.length) {
+        throw new ApiError('Could not reach the server. Please try again in a moment.', 0, null)
+      }
+      await sleep(RETRY_DELAYS_MS[attempt])
+      attempt += 1
+    }
   }
 
   const data = await response.json().catch(() => ({}))

@@ -4,7 +4,7 @@ load_dotenv()
 
 from app import create_app
 from app.extensions import db
-from app.models import Cohort, Category, TechTag, User, Project, ProjectMember, SosPost, SosComment
+from app.models import Cohort, Category, TechTag, User, Project, ProjectMember, CodeClinicPost, CodeClinicComment
 
 app = create_app()
 
@@ -134,9 +134,9 @@ DEMO_PROJECTS = [
     ),
 ]
 
-# Real-life problems students actually hit, so /sos has something worth
+# Real-life problems students actually hit, so /code-clinic has something worth
 # browsing on day one instead of an empty feed.
-SOS_POSTS = [
+CODE_CLINIC_POSTS = [
     dict(
         author="Diego Ramirez", resolved=True,
         question="My React app gets \"blocked by CORS policy\" when I call my Flask API from the "
@@ -316,14 +316,14 @@ with app.app_context():
 
     db.session.commit()
 
-    sos_posts_created = 0
-    if SosPost.query.count() == 0:
-        for p in SOS_POSTS:
+    code_clinic_posts_created = 0
+    if CodeClinicPost.query.count() == 0:
+        for p in CODE_CLINIC_POSTS:
             author = User.query.filter_by(name=p["author"]).first()
             if not author:
                 continue
 
-            post = SosPost(
+            post = CodeClinicPost(
                 user_id=author.id,
                 question=p["question"],
                 media_type=p["media_type"],
@@ -337,12 +337,12 @@ with app.app_context():
                 commenter = User.query.filter_by(name=commenter_name).first()
                 if not commenter:
                     continue
-                db.session.add(SosComment(sos_post_id=post.id, user_id=commenter.id, body=body))
+                db.session.add(CodeClinicComment(code_clinic_post_id=post.id, user_id=commenter.id, body=body))
 
-            sos_posts_created += 1
+            code_clinic_posts_created += 1
 
     db.session.commit()
     print(f"Seeded {Cohort.query.count()} cohorts, {Category.query.count()} categories, "
           f"{TechTag.query.count()} tech tags, {admins_created} new admin account(s), "
           f"{users_created} new demo user(s), {projects_created} new demo project(s), "
-          f"{sos_posts_created} new SOS post(s).")
+          f"{code_clinic_posts_created} new Code Clinic post(s).")

@@ -17,9 +17,9 @@ import Register from './pages/Register.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
 import AIHub from './pages/AIHub.jsx'
-import SosFeed from './pages/SosFeed.jsx'
-import SosPostDetail from './pages/SosPostDetail.jsx'
-import PostSos from './pages/PostSos.jsx'
+import CodeClinicFeed from './pages/CodeClinicFeed.jsx'
+import CodeClinicPostDetail from './pages/CodeClinicPostDetail.jsx'
+import PostCodeClinic from './pages/PostCodeClinic.jsx'
 import NotFound from './pages/NotFound.jsx'
 import AIAssistant from './components/assistant/AIAssistant.jsx'
 import RequireAdmin from './components/RequireAdmin.jsx'
@@ -59,9 +59,9 @@ function App() {
           <Route path="/top" element={<TopRated />} />
           <Route path="/inbox" element={<Inbox />} />
           <Route path="/ai-hub" element={<AIHub />} />
-          <Route path="/sos" element={<SosFeed />} />
-          <Route path="/sos/new" element={<PostSos />} />
-          <Route path="/sos/:id" element={<SosPostDetail />} />
+          <Route path="/code-clinic" element={<CodeClinicFeed />} />
+          <Route path="/code-clinic/new" element={<PostCodeClinic />} />
+          <Route path="/code-clinic/:id" element={<CodeClinicPostDetail />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/creators/:id" element={<Profile />} />

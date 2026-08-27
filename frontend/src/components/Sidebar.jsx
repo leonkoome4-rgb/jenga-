@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Home, Search, Trophy, Inbox, User, Plus, ShieldCheck, Sparkles, LogOut, LifeBuoy } from 'lucide-react'
+import { Home, Search, Trophy, Inbox, User, Plus, ShieldCheck, Sparkles, LogOut, Stethoscope } from 'lucide-react'
 import Logo from './Logo.jsx'
 import { selectCurrentUser } from '../features/user/userSlice.js'
 import { selectIsAuthenticated, selectAuthUser, loggedOut } from '../features/auth/authSlice.js'
@@ -20,7 +20,7 @@ export default function Sidebar() {
     { label: 'Explore', to: '/explore', icon: Search, match: (p) => p.startsWith('/explore') },
     { label: 'Leaderboard', to: '/top', icon: Trophy, match: (p) => p.startsWith('/top') },
     { label: 'Inbox', to: '/inbox', icon: Inbox, match: (p) => p.startsWith('/inbox') },
-    { label: 'SOS', to: '/sos', icon: LifeBuoy, match: (p) => p.startsWith('/sos') },
+    { label: 'Code Clinic', to: '/code-clinic', icon: Stethoscope, match: (p) => p.startsWith('/code-clinic') },
     { label: 'AI Hub', to: '/ai-hub', icon: Sparkles, match: (p) => p.startsWith('/ai-hub') },
     {
       label: 'Profile',

@@ -71,12 +71,13 @@ responses and attribute `AI_HISTORY` when present. Since there's no login to
 hold accountable for volume, every `/api/ai/*` route is rate-limited by IP
 (40 requests / 10 minutes, `app/utils/rate_limit.py`).
 
-### SOS (problem-solving)
+### Code Clinic (problem-solving)
 
-Anyone can browse `/sos`; posting a problem (text, or a video/image URL) and
-commenting both require login (`app/routes/sos.py`, `SosPost`/`SosComment`
-models). The original poster can mark their own post resolved. Seeded with
-real-life software dev problems (see `seed.py`) so there's something to
+Anyone can browse `/code-clinic`; posting a problem (text, or a video/image
+URL) and commenting both require login (`app/routes/code_clinic.py`,
+`CodeClinicPost`/`CodeClinicComment` models). The original poster can mark
+their own post resolved. Seeded with real-life software dev problems (see
+`seed.py`) so there's something to
 browse from the start.
 
 ### Google Sign-In
@@ -122,7 +123,7 @@ free database expires after 30 days and Neon's free tier doesn't.
    else (`TURNSTILE_*`, `AI_MODEL`) is already filled in.
 5. Deploy. The build step runs `flask db upgrade` and `python seed.py`
    automatically, so the schema, the Group 6 admin accounts, and the demo
-   projects/SOS posts are ready the moment it's live.
+   projects/Code Clinic posts are ready the moment it's live.
 6. Copy the resulting service URL (`https://tawi-backend-xxxx.onrender.com`)
    into the frontend's `VITE_API_URL` and redeploy the frontend.
 
@@ -197,5 +198,5 @@ URL.
 - **Profile** (`/profile`, `/creators/:id`) — a student's builds, stats, and skills
 - **Add project** (`/add-project`) — publish a build with image/video, tech stack, team
 - **AI Hub** (`/ai-hub`) — categorize, describe, tag, skill-gap, team-match, README, debug
-- **SOS** (`/sos`, `/sos/new`, `/sos/:id`) — post a real coding problem (text/video/image) and get help from other builders
+- **Code Clinic** (`/code-clinic`, `/code-clinic/new`, `/code-clinic/:id`) — post a real coding problem (text/video/image) and get help from other builders
 - **Admin** (`/admin`, `/admin/cohorts`) — manage projects and cohorts

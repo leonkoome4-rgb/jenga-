@@ -1,32 +1,32 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { LifeBuoy, Video, Image as ImageIcon, CheckCircle2, Plus } from 'lucide-react'
+import { Stethoscope, Video, Image as ImageIcon, CheckCircle2, Plus } from 'lucide-react'
 import Avatar from '../components/Avatar.jsx'
 import Button from '../components/Button.jsx'
-import { fetchSosPosts, selectSosPosts, selectSosPostsStatus } from '../features/sos/sosSlice.js'
+import { fetchPosts, selectPosts, selectPostsStatus } from '../features/codeClinic/codeClinicSlice.js'
 
 const MEDIA_ICON = { video: Video, image: ImageIcon }
 
-export default function SosFeed() {
+export default function CodeClinicFeed() {
   const dispatch = useDispatch()
-  const posts = useSelector(selectSosPosts)
-  const status = useSelector(selectSosPostsStatus)
+  const posts = useSelector(selectPosts)
+  const status = useSelector(selectPostsStatus)
 
   useEffect(() => {
-    dispatch(fetchSosPosts())
+    dispatch(fetchPosts())
   }, [dispatch])
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-8 sm:px-6 lg:px-8 lg:pb-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-[24px] font-bold text-navy">SOS</h1>
+          <h1 className="font-heading text-[24px] font-bold text-navy">Code Clinic</h1>
           <p className="mt-1 text-[14px] text-text-secondary">
             Stuck on something? Post a clip, screenshot, or question and get help from other builders.
           </p>
         </div>
-        <Button to="/sos/new" variant="primary" className="px-4 py-2">
+        <Button to="/code-clinic/new" variant="primary" className="px-4 py-2">
           <Plus size={16} strokeWidth={2.25} />
           Post a problem
         </Button>
@@ -36,9 +36,9 @@ export default function SosFeed() {
         <p className="mt-16 text-center text-[14px] text-text-muted">Loading…</p>
       ) : posts.length === 0 ? (
         <div className="mt-16 flex flex-col items-center gap-3 text-center">
-          <LifeBuoy size={28} strokeWidth={1.5} className="text-text-muted" />
+          <Stethoscope size={28} strokeWidth={1.5} className="text-text-muted" />
           <p className="text-[14px] text-text-secondary">No problems posted yet.</p>
-          <Link to="/sos/new" className="text-[14px] font-medium text-orange">
+          <Link to="/code-clinic/new" className="text-[14px] font-medium text-orange">
             Be the first to ask →
           </Link>
         </div>
@@ -49,7 +49,7 @@ export default function SosFeed() {
             return (
               <Link
                 key={post.id}
-                to={`/sos/${post.id}`}
+                to={`/code-clinic/${post.id}`}
                 className="flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-colors hover:border-orange"
               >
                 <Avatar name={post.author?.name} src={post.author?.avatar_url} size="md" />

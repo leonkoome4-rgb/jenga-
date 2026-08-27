@@ -217,8 +217,8 @@ class AIHistory(db.Model):
         }
 
 
-class SosPost(db.Model):
-    __tablename__ = "sos_posts"
+class CodeClinicPost(db.Model):
+    __tablename__ = "code_clinic_posts"
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
@@ -230,7 +230,7 @@ class SosPost(db.Model):
 
     user = db.relationship("User")
     comments = db.relationship(
-        "SosComment", back_populates="post", cascade="all, delete-orphan", order_by="SosComment.created_at"
+        "CodeClinicComment", back_populates="post", cascade="all, delete-orphan", order_by="CodeClinicComment.created_at"
     )
 
     def to_dict(self, detailed=False):
@@ -249,16 +249,16 @@ class SosPost(db.Model):
         return data
 
 
-class SosComment(db.Model):
-    __tablename__ = "sos_comments"
+class CodeClinicComment(db.Model):
+    __tablename__ = "code_clinic_comments"
 
     id = db.Column(db.Integer, primary_key=True)
-    sos_post_id = db.Column(db.Integer, db.ForeignKey("sos_posts.id"), nullable=False)
+    code_clinic_post_id = db.Column(db.Integer, db.ForeignKey("code_clinic_posts.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
 
-    post = db.relationship("SosPost", back_populates="comments")
+    post = db.relationship("CodeClinicPost", back_populates="comments")
     user = db.relationship("User")
 
     def to_dict(self):
