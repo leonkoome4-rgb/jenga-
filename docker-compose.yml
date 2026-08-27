@@ -28,7 +28,10 @@ services:
         condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:?Set VITE_TURNSTILE_SITE_KEY in .env}
     ports:
       - "8080:80"
     depends_on:
