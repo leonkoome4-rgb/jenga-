@@ -4,8 +4,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { AlertCircle } from 'lucide-react'
 import AuthLayout from '../layouts/AuthLayout.jsx'
 import Button from '../components/Button.jsx'
+import GoogleSignInButton from '../components/GoogleSignInButton.jsx'
 import {
   loginUser,
+  googleLogin,
   selectAuthStatus,
   selectAuthError,
   authErrorCleared,
@@ -26,6 +28,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
 
   const demoAdmin = findDemoAdmin(email, password)
+  const googleConfigured = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -48,6 +51,14 @@ export default function Login() {
     }
   }
 
+  const handleGoogleCredential = async (credential) => {
+    dispatch(authErrorCleared())
+    const result = await dispatch(googleLogin(credential))
+    if (googleLogin.fulfilled.match(result)) {
+      navigate('/ai-hub')
+    }
+  }
+
   return (
     <AuthLayout title="Log in" subtitle="Welcome back.">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -56,6 +67,17 @@ export default function Login() {
             <AlertCircle size={15} strokeWidth={1.75} className="mt-0.5 shrink-0 text-orange" />
             {error}
           </div>
+        )}
+
+        {googleConfigured && (
+          <>
+            <GoogleSignInButton onCredential={handleGoogleCredential} className="flex justify-center" />
+            <div className="flex items-center gap-3 text-[12px] text-text-muted">
+              <div className="h-px flex-1 bg-border" />
+              or
+              <div className="h-px flex-1 bg-border" />
+            </div>
+          </>
         )}
 
         <div className="flex flex-col gap-1.5">

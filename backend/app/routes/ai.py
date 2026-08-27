@@ -1,10 +1,23 @@
 from flask import Blueprint, request, jsonify
 from app.extensions import db
 from app.models import Project, User, AIHistory
-from app.utils.decorators import get_current_user
+from app.utils.decorators import get_current_user_optional
+from app.utils.rate_limit import check_rate_limit
 from app.services.ai_service import call_ai, call_ai_messages, AIServiceError
 
 bp = Blueprint("ai", __name__, url_prefix="/api/ai")
+
+# AI Hub and the assistant don't require login, so there's no account to
+# hold accountable for volume -- rate limit by IP instead. Every route here
+# calls a paid API, so this is a real cost control, not a formality.
+RATE_LIMIT_MAX_REQUESTS = 40
+RATE_LIMIT_WINDOW_SECONDS = 600
+
+
+@bp.before_request
+def _enforce_rate_limit():
+    key = request.remote_addr or "unknown"
+    return check_rate_limit(key, RATE_LIMIT_MAX_REQUESTS, RATE_LIMIT_WINDOW_SECONDS)
 
 # Destinations the chat assistant is allowed to send users to. Whatever the
 # model returns for "navigate_to" is checked against this whitelist server
@@ -24,6 +37,8 @@ ASSISTANT_ROUTES = {
 
 
 def _log(user_id, feature, input_data, output_data):
+    if not user_id:
+        return  # guest request -- nothing to attribute the history to
     db.session.add(
         AIHistory(user_id=user_id, feature=feature, input=input_data, output=output_data)
     )
@@ -43,13 +58,13 @@ def _run(feature, system_prompt, user_prompt, input_data, current_user):
     except AIServiceError as exc:
         return jsonify({"success": False, "error": str(exc)}), 502
 
-    _log(current_user.id, feature, input_data, output)
+    _log(current_user.id if current_user else None, feature, input_data, output)
     return jsonify({"success": True, "result": output})
 
 
 @bp.post("/project-categorize")
 def project_categorize():
-    current_user = get_current_user()
+    current_user = get_current_user_optional()
     data = request.get_json(silent=True) or {}
     error = _require_keys(data, ["title", "description"])
     if error:
@@ -73,7 +88,7 @@ def project_categorize():
 
 @bp.post("/project-description")
 def project_description():
-    current_user = get_current_user()
+    current_user = get_current_user_optional()
     data = request.get_json(silent=True) or {}
     error = _require_keys(data, ["name"])
     if error:
@@ -96,7 +111,7 @@ def project_description():
 
 @bp.post("/tags")
 def generate_tags():
-    current_user = get_current_user()
+    current_user = get_current_user_optional()
     data = request.get_json(silent=True) or {}
     error = _require_keys(data, ["title", "description"])
     if error:
@@ -118,7 +133,7 @@ def generate_tags():
 
 @bp.post("/skill-gap")
 def skill_gap():
-    current_user = get_current_user()
+    current_user = get_current_user_optional()
     data = request.get_json(silent=True) or {}
 
     required_tech = data.get("required_tech")
@@ -153,7 +168,7 @@ def skill_gap():
 
 @bp.post("/team-match")
 def team_match():
-    current_user = get_current_user()
+    current_user = get_current_user_optional()
     data = request.get_json(silent=True) or {}
 
     required_tech = data.get("required_tech")
@@ -168,7 +183,10 @@ def team_match():
     if error:
         return jsonify({"success": False, "error": error}), 400
 
-    candidates = User.query.filter(User.id != current_user.id).limit(30).all()
+    candidates_query = User.query
+    if current_user:
+        candidates_query = candidates_query.filter(User.id != current_user.id)
+    candidates = candidates_query.limit(30).all()
     if not candidates:
         return jsonify({"success": True, "result": {"matches": []}})
 
@@ -213,13 +231,13 @@ def team_match():
             )
 
     result = {"matches": matches}
-    _log(current_user.id, "team-match", {"required_tech": required_tech}, result)
+    _log(current_user.id if current_user else None, "team-match", {"required_tech": required_tech}, result)
     return jsonify({"success": True, "result": result})
 
 
 @bp.post("/readme")
 def generate_readme():
-    current_user = get_current_user()
+    current_user = get_current_user_optional()
     data = request.get_json(silent=True) or {}
 
     project_id = data.get("project_id")
@@ -257,7 +275,7 @@ def generate_readme():
 
 @bp.post("/debug")
 def debug_assistant():
-    current_user = get_current_user()
+    current_user = get_current_user_optional()
     data = request.get_json(silent=True) or {}
     error = _require_keys(data, ["language", "code", "error_message"])
     if error:
@@ -279,7 +297,7 @@ def debug_assistant():
 
 @bp.post("/chat")
 def chat():
-    current_user = get_current_user()
+    current_user = get_current_user_optional()
     data = request.get_json(silent=True) or {}
     message = (data.get("message") or "").strip()
     if not message:
@@ -296,7 +314,6 @@ def chat():
     ]
 
     routes_list = "\n".join(f"- {path} :: {desc}" for path, desc in ASSISTANT_ROUTES.items())
-    projects = sorted({m.project.name for m in current_user.project_memberships if m.project})
     system_prompt = (
         "You are the in-app assistant for Tawi (Moringa x Tawi), a project bank and creator "
         "network for Moringa School students. Be brief, warm, and helpful. You can hold a "
@@ -308,17 +325,28 @@ def chat():
         'or message to show the user) and "navigate_to" (one of the exact paths above if the '
         "user asked to go/see/open/take-me-to that page, otherwise null). Only set navigate_to "
         "when the user's message is actually a request to go somewhere -- not for general "
-        "questions that merely mention a page.\n\n"
-        "The signed-in user's account:\n"
-        f"- Name: {current_user.name}\n"
-        f"- Role: {current_user.role}\n"
-        f"- Cohort: {current_user.cohort.name if current_user.cohort else 'not set'}\n"
-        f"- Bio: {current_user.bio or 'not set'}\n"
-        f"- GitHub: {current_user.github_url or 'not set'}\n"
-        f"- Projects: {', '.join(projects) or 'none published yet'}\n"
-        "Use this to personalize answers when relevant (e.g. questions about 'my projects' "
-        "or 'my profile'). Don't recite it unprompted."
+        "questions that merely mention a page."
     )
+
+    if current_user:
+        projects = sorted({m.project.name for m in current_user.project_memberships if m.project})
+        system_prompt += (
+            "\n\nThe user is logged in. Their account:\n"
+            f"- Name: {current_user.name}\n"
+            f"- Role: {current_user.role}\n"
+            f"- Cohort: {current_user.cohort.name if current_user.cohort else 'not set'}\n"
+            f"- Bio: {current_user.bio or 'not set'}\n"
+            f"- GitHub: {current_user.github_url or 'not set'}\n"
+            f"- Projects: {', '.join(projects) or 'none published yet'}\n"
+            "Use this to personalize answers when relevant (e.g. questions about 'my "
+            "projects' or 'my profile'). Don't recite it unprompted."
+        )
+    else:
+        system_prompt += (
+            "\n\nThe visitor is browsing without an account. If they ask about their own "
+            "account, projects, or profile, gently mention that logging in unlocks that -- "
+            "but don't block or refuse to help with anything else."
+        )
 
     messages = [{"role": "system", "content": system_prompt}, *history, {"role": "user", "content": message}]
 

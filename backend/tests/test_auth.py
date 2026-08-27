@@ -216,3 +216,36 @@ def test_reset_password_rejects_invalid_token(client):
         },
     )
     assert response.status_code == 400
+
+
+def test_google_login_rejects_missing_credential(client):
+    response = client.post("/api/auth/google", json={})
+    assert response.status_code == 400
+
+
+def test_google_login_rejects_bogus_credential(client):
+    response = client.post("/api/auth/google", json={"credential": "not-a-real-jwt"})
+    assert response.status_code == 400
+
+
+def test_google_login_creates_and_reuses_account(client, monkeypatch):
+    """
+    Doesn't hit real Google servers -- verifies the route logic itself
+    (create-on-first-login, reuse-on-second-login) against a stubbed verifier.
+    """
+    import app.routes.auth as auth_routes
+
+    monkeypatch.setattr(
+        auth_routes, "verify_google_id_token", lambda credential: ("new.user@gmail.com", "New User")
+    )
+
+    first = client.post("/api/auth/google", json={"credential": "fake"})
+    first_data = first.get_json()
+    assert first.status_code == 200, first_data
+    assert first_data["user"]["email"] == "new.user@gmail.com"
+    assert first_data["user"]["role"] == "student"
+
+    second = client.post("/api/auth/google", json={"credential": "fake"})
+    second_data = second.get_json()
+    assert second.status_code == 200
+    assert second_data["user"]["id"] == first_data["user"]["id"]

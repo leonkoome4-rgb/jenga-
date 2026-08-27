@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux'
 import { X, Send, ArrowUpRight } from 'lucide-react'
 import { api } from '../../api/client.js'
 import { selectAuthToken, selectIsAuthenticated } from '../../features/auth/authSlice.js'
-import Button from '../Button.jsx'
 import DogMascot from './DogMascot.jsx'
 
 const WELCOME = {
@@ -117,82 +116,65 @@ export default function AIAssistant() {
               <p className="text-[14px] font-semibold text-navy">Tawi mascot</p>
               <p className="text-[11px] text-text-muted">Ask anything, or ask to go somewhere</p>
             </div>
-            {isAuthenticated && (
-              <Link
-                to="/ai-hub"
-                onClick={() => setOpen(false)}
-                className="ml-auto flex shrink-0 items-center gap-1 text-[11px] font-medium text-orange"
-              >
-                AI Hub
-                <ArrowUpRight size={12} strokeWidth={2} />
-              </Link>
+            <Link
+              to="/ai-hub"
+              onClick={() => setOpen(false)}
+              className="ml-auto flex shrink-0 items-center gap-1 text-[11px] font-medium text-orange"
+            >
+              AI Hub
+              <ArrowUpRight size={12} strokeWidth={2} />
+            </Link>
+          </div>
+
+          {!isAuthenticated && (
+            <p className="border-b border-border px-4 py-2 text-center text-[11px] text-text-muted">
+              <Link to="/login" className="font-medium text-orange">
+                Log in
+              </Link>{' '}
+              for answers personalized to your account.
+            </p>
+          )}
+
+          <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-[13px] leading-relaxed ${
+                    m.role === 'user'
+                      ? 'rounded-br-sm bg-orange text-white'
+                      : 'rounded-bl-sm bg-bg text-navy'
+                  }`}
+                >
+                  {m.content}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="rounded-2xl rounded-bl-sm bg-bg px-3.5 py-2 text-[13px] text-text-muted">
+                  Thinking…
+                </div>
+              </div>
             )}
           </div>
 
-          {!isAuthenticated ? (
-            <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
-              <p className="text-[13px] leading-relaxed text-text-secondary">
-                Log in to chat with the assistant and get answers personalized to your account.
-              </p>
-              <div className="flex gap-2">
-                <Button to="/login" variant="primary" className="px-4 py-2 text-[13px]">
-                  Log in
-                </Button>
-                <Button to="/register" variant="secondary" className="px-4 py-2 text-[13px]">
-                  Create account
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-                {messages.map((m, i) => (
-                  <div
-                    key={i}
-                    className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-[13px] leading-relaxed ${
-                        m.role === 'user'
-                          ? 'rounded-br-sm bg-orange text-white'
-                          : 'rounded-bl-sm bg-bg text-navy'
-                      }`}
-                    >
-                      {m.content}
-                    </div>
-                  </div>
-                ))}
-                {loading && (
-                  <div className="flex justify-start">
-                    <div className="rounded-2xl rounded-bl-sm bg-bg px-3.5 py-2 text-[13px] text-text-muted">
-                      Thinking…
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <form
-                onSubmit={handleSend}
-                className="flex items-center gap-2 border-t border-border p-3"
-              >
-                <input
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Message the assistant…"
-                  className="min-w-0 flex-1 rounded-full border border-border bg-bg px-3.5 py-2 text-[13px] text-navy placeholder:text-text-muted focus:outline-none focus:border-orange"
-                />
-                <button
-                  type="submit"
-                  disabled={!input.trim() || loading}
-                  aria-label="Send"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange text-white disabled:opacity-40"
-                >
-                  <Send size={15} strokeWidth={2} />
-                </button>
-              </form>
-            </>
-          )}
+          <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-border p-3">
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Message the assistant…"
+              className="min-w-0 flex-1 rounded-full border border-border bg-bg px-3.5 py-2 text-[13px] text-navy placeholder:text-text-muted focus:outline-none focus:border-orange"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || loading}
+              aria-label="Send"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange text-white disabled:opacity-40"
+            >
+              <Send size={15} strokeWidth={2} />
+            </button>
+          </form>
         </div>
       )}
     </>

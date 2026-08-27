@@ -9,6 +9,7 @@ from app.models import User, Cohort, PasswordResetToken
 from app.models.models import utcnow
 from app.utils.decorators import get_current_user
 from app.services.captcha_service import verify_turnstile, CaptchaServiceError
+from app.services.google_auth_service import verify_google_id_token, GoogleAuthError
 
 bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
@@ -89,6 +90,30 @@ def login():
     user = User.query.filter_by(email=email).first()
     if not user or not user.check_password(password):
         return jsonify({"success": False, "error": "Invalid email or password"}), 401
+
+    token = create_access_token(identity=str(user.id))
+    return jsonify({"success": True, "token": token, "user": user.to_dict(include_email=True)})
+
+
+@bp.post("/google")
+def google_login():
+    """Sign in (or silently register) with a Google Identity Services ID
+    token. Google's own sign-in flow already handles bot/abuse protection,
+    so this intentionally skips the CAPTCHA check the password routes use."""
+    data = request.get_json(silent=True) or {}
+    credential = data.get("credential")
+
+    try:
+        email, name = verify_google_id_token(credential)
+    except GoogleAuthError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        user = User(name=name, email=email, role="student")
+        user.set_password(secrets.token_urlsafe(32))  # never used -- Google-only account
+        db.session.add(user)
+        db.session.commit()
 
     token = create_access_token(identity=str(user.id))
     return jsonify({"success": True, "token": token, "user": user.to_dict(include_email=True)})

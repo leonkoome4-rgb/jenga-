@@ -89,6 +89,17 @@ export const loginUser = createAsyncThunk(
   },
 )
 
+export const googleLogin = createAsyncThunk(
+  'auth/googleLogin',
+  async (credential, { rejectWithValue }) => {
+    try {
+      return await api.post('/api/auth/google', { credential })
+    } catch (err) {
+      return rejectWithValue({ status: err.status, message: err.data?.error || err.message })
+    }
+  },
+)
+
 export const fetchCurrentUser = createAsyncThunk(
   'auth/fetchCurrentUser',
   async (_, { getState, rejectWithValue }) => {
@@ -170,6 +181,9 @@ const authSlice = createSlice({
       .addCase(loginUser.pending, handlePending)
       .addCase(loginUser.fulfilled, handleAuthSuccess)
       .addCase(loginUser.rejected, handleRejected)
+      .addCase(googleLogin.pending, handlePending)
+      .addCase(googleLogin.fulfilled, handleAuthSuccess)
+      .addCase(googleLogin.rejected, handleRejected)
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload.user
       })

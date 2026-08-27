@@ -9,9 +9,13 @@ requires_ai_key = pytest.mark.skipif(
 )
 
 
-def test_ai_routes_require_jwt(client):
-    response = client.post("/api/ai/project-categorize", json={"title": "x", "description": "y"})
-    assert response.status_code == 401
+def test_ai_routes_work_without_login(client):
+    """
+    AI Hub and the assistant don't require an account -- only a valid JWT is
+    used to personalize the response and attribute AI_HISTORY when present.
+    """
+    response = client.post("/api/ai/project-categorize", json={})
+    assert response.status_code == 400  # reaches validation, not an auth wall
 
 
 def test_categorize_rejects_missing_fields(client, user_a):
@@ -50,13 +54,17 @@ def test_team_match_with_no_other_users_returns_empty_list(client, user_a):
     assert data["result"]["matches"] == []
 
 
-def test_chat_requires_jwt(client):
+@requires_ai_key
+def test_chat_works_for_logged_out_visitor(client):
     """
-    The assistant requires login just like every other AI Hub route -- users
-    must sign in before they can use the AI at all.
+    The floating assistant is usable by guests too -- no account required.
     """
     response = client.post("/api/ai/chat", json={"message": "What is Tawi?"})
-    assert response.status_code == 401
+    data = response.get_json()
+
+    assert response.status_code == 200, data
+    assert data["success"] is True
+    assert isinstance(data["result"]["reply"], str) and data["result"]["reply"]
 
 
 def test_chat_requires_message(client, user_a):

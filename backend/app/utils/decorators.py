@@ -11,6 +11,17 @@ def get_current_user():
     return db.session.get(User, int(user_id))
 
 
+def get_current_user_optional():
+    """Like get_current_user, but returns None instead of raising when
+    there's no (or an invalid/expired) token, for routes usable by guests."""
+    try:
+        verify_jwt_in_request(optional=True)
+    except Exception:
+        return None
+    user_id = get_jwt_identity()
+    return db.session.get(User, int(user_id)) if user_id else None
+
+
 def require_admin(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):

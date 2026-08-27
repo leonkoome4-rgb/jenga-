@@ -27,4 +27,8 @@ BACKEND_PID=$!
 ) &
 FRONTEND_PID=$!
 
-wait -n "$BACKEND_PID" "$FRONTEND_PID"
+# `wait -n` needs bash 4.3+, but macOS ships bash 3.2 by default (Apple
+# won't ship a GPLv3 bash), so poll instead for portability.
+while kill -0 "$BACKEND_PID" 2>/dev/null && kill -0 "$FRONTEND_PID" 2>/dev/null; do
+  sleep 1
+done
