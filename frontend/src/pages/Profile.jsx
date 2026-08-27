@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Navigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Navigate, Link } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { ShieldCheck, Link2, Check, HandCoins } from 'lucide-react'
 import Avatar from '../components/Avatar.jsx'
@@ -8,14 +8,16 @@ import { getUserById } from '../data/users.js'
 import { api } from '../api/client.js'
 import {
   selectProjectsByOwner,
-  projectTipped,
+  tipProject,
 } from '../features/projects/projectsSlice.js'
 import { selectCurrentUser } from '../features/user/userSlice.js'
-import { selectIsAuthenticated, selectAuthUser } from '../features/auth/authSlice.js'
+import { selectIsAuthenticated, selectAuthUser, selectAuthToken } from '../features/auth/authSlice.js'
 
 export default function Profile() {
   const { id } = useParams()
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const authToken = useSelector(selectAuthToken)
   const currentUser = useSelector(selectCurrentUser)
   const isRealAuthenticated = useSelector(selectIsAuthenticated)
   const authUser = useSelector(selectAuthUser)
@@ -100,7 +102,11 @@ export default function Profile() {
 
   const handleTip = () => {
     if (!topProject) return
-    dispatch(projectTipped(topProject.id))
+    if (!authToken) {
+      navigate('/login')
+      return
+    }
+    dispatch(tipProject(topProject.id))
     setTipped(true)
     setTimeout(() => setTipped(false), 1500)
   }

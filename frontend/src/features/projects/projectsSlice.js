@@ -22,19 +22,52 @@ export const normalizeProject = (project) => ({
   owner: normalizeUser(project.owner),
   members: (project.members || []).map(normalizeUser),
   createdAt: project.created_at?.slice(0, 10) || '',
-  likes: 0,
-  liked: false,
-  tips: 0,
+  likes: project.like_count ?? 0,
+  liked: project.liked_by_me ?? false,
+  tips: project.tip_count ?? 0,
 })
 
-export const fetchProjects = createAsyncThunk('projects/fetchAll', async (_, { rejectWithValue }) => {
-  try {
-    const data = await api.get('/api/projects')
-    return data.projects
-  } catch (err) {
-    return rejectWithValue(err.data?.error || err.message)
-  }
-})
+export const fetchProjects = createAsyncThunk(
+  'projects/fetchAll',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const { token } = getState().auth
+      const data = await api.get('/api/projects', token ? { token } : undefined)
+      return data.projects
+    } catch (err) {
+      return rejectWithValue(err.data?.error || err.message)
+    }
+  },
+)
+
+// Liking requires an account (someone has to "own" the like so it can be
+// toggled back off), so this hits the real backend rather than mutating
+// local state -- it's a real, shared, persisted interaction now.
+export const toggleProjectLike = createAsyncThunk(
+  'projects/toggleLike',
+  async (projectId, { getState, rejectWithValue }) => {
+    try {
+      const { token } = getState().auth
+      const data = await api.post(`/api/projects/${projectId}/like`, undefined, { token })
+      return { projectId, liked: data.liked, likeCount: data.like_count }
+    } catch (err) {
+      return rejectWithValue(err.data?.error || err.message)
+    }
+  },
+)
+
+export const tipProject = createAsyncThunk(
+  'projects/tip',
+  async (projectId, { getState, rejectWithValue }) => {
+    try {
+      const { token } = getState().auth
+      const data = await api.post(`/api/projects/${projectId}/tip`, undefined, { token })
+      return { projectId, tipCount: data.tip_count }
+    } catch (err) {
+      return rejectWithValue(err.data?.error || err.message)
+    }
+  },
+)
 
 const initialState = {
   items: [],
@@ -57,31 +90,31 @@ const projectsSlice = createSlice({
     projectDeleted(state, action) {
       state.items = state.items.filter((p) => p.id !== action.payload)
     },
-    projectLikeToggled(state, action) {
-      const project = state.items.find((p) => p.id === action.payload)
-      if (project) {
-        project.liked = !project.liked
-        project.likes += project.liked ? 1 : -1
-      }
-    },
-    projectTipped(state, action) {
-      const project = state.items.find((p) => p.id === action.payload)
-      if (project) {
-        project.tips += 1
-      }
-    },
   },
   extraReducers(builder) {
-    builder.addCase(fetchProjects.fulfilled, (state, action) => {
-      state.items = action.payload.map(normalizeProject)
-    })
+    builder
+      .addCase(fetchProjects.fulfilled, (state, action) => {
+        state.items = action.payload.map(normalizeProject)
+      })
+      .addCase(toggleProjectLike.fulfilled, (state, action) => {
+        const project = state.items.find((p) => p.id === action.payload.projectId)
+        if (project) {
+          project.liked = action.payload.liked
+          project.likes = action.payload.likeCount
+        }
+      })
+      .addCase(tipProject.fulfilled, (state, action) => {
+        const project = state.items.find((p) => p.id === action.payload.projectId)
+        if (project) {
+          project.tips = action.payload.tipCount
+        }
+      })
   },
 })
 
-export const { projectCreated, projectUpdated, projectDeleted, projectLikeToggled, projectTipped } =
-  projectsSlice.actions
-
 export default projectsSlice.reducer
+
+export const { projectCreated, projectUpdated, projectDeleted } = projectsSlice.actions
 
 export const selectAllProjects = (state) => state.projects.items
 export const selectProjectById = (state, id) =>

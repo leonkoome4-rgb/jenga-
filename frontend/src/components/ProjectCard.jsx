@@ -1,15 +1,26 @@
-import { Link } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { Link, useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import { Heart } from 'lucide-react'
 import ImagePlaceholder from './ImagePlaceholder.jsx'
 import Avatar from './Avatar.jsx'
-import { projectLikeToggled } from '../features/projects/projectsSlice.js'
+import { toggleProjectLike } from '../features/projects/projectsSlice.js'
+import { selectAuthToken } from '../features/auth/authSlice.js'
 
 const TINTS = ['#4FA3DC', '#F1793D']
 
 export default function ProjectCard({ project, index = 0 }) {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const token = useSelector(selectAuthToken)
   const tint = TINTS[index % TINTS.length]
+
+  const handleLike = () => {
+    if (!token) {
+      navigate('/login')
+      return
+    }
+    dispatch(toggleProjectLike(project.id))
+  }
 
   return (
     <article className="overflow-hidden rounded-2xl border border-border bg-white">
@@ -28,7 +39,7 @@ export default function ProjectCard({ project, index = 0 }) {
 
         <button
           type="button"
-          onClick={() => dispatch(projectLikeToggled(project.id))}
+          onClick={handleLike}
           aria-label={project.liked ? 'Unlike' : 'Like'}
           className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 shadow-sm backdrop-blur-sm"
         >

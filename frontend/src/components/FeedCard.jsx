@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Heart, Handshake, HandCoins, Share2, Check, Link2 } from 'lucide-react'
 import MediaBackground from './MediaBackground.jsx'
 import Avatar from './Avatar.jsx'
-import { projectLikeToggled, projectTipped } from '../features/projects/projectsSlice.js'
+import { toggleProjectLike, tipProject } from '../features/projects/projectsSlice.js'
 import { api } from '../api/client.js'
 import { selectAuthToken } from '../features/auth/authSlice.js'
 
@@ -23,9 +23,32 @@ const FeedCard = forwardRef(function FeedCard({ project, isActive = true }, ref)
   const [connectionError, setConnectionError] = useState('')
   const [copied, setCopied] = useState(false)
   const [tipped, setTipped] = useState(false)
+  const [engagementError, setEngagementError] = useState('')
   const tint = CATEGORY_TINT[project.category] ?? '#4FA3DC'
 
   const stop = (e) => e.stopPropagation()
+
+  const handleLike = (e) => {
+    stop(e)
+    if (!token) {
+      setEngagementError('Log in to like')
+      return
+    }
+    setEngagementError('')
+    dispatch(toggleProjectLike(project.id))
+  }
+
+  const handleTip = (e) => {
+    stop(e)
+    if (!token) {
+      setEngagementError('Log in to tip')
+      return
+    }
+    setEngagementError('')
+    dispatch(tipProject(project.id))
+    setTipped(true)
+    setTimeout(() => setTipped(false), 1200)
+  }
 
   const handleShare = (e) => {
     stop(e)
@@ -132,10 +155,7 @@ const FeedCard = forwardRef(function FeedCard({ project, isActive = true }, ref)
 
           <button
             type="button"
-            onClick={(e) => {
-              stop(e)
-              dispatch(projectLikeToggled(project.id))
-            }}
+            onClick={handleLike}
             className="flex flex-col items-center gap-1"
             aria-label={project.liked ? 'Unlike' : 'Like'}
           >
@@ -149,12 +169,7 @@ const FeedCard = forwardRef(function FeedCard({ project, isActive = true }, ref)
 
           <button
             type="button"
-            onClick={(e) => {
-              stop(e)
-              dispatch(projectTipped(project.id))
-              setTipped(true)
-              setTimeout(() => setTipped(false), 1200)
-            }}
+            onClick={handleTip}
             className="flex flex-col items-center gap-1"
             aria-label="Tip this build"
           >
@@ -181,7 +196,11 @@ const FeedCard = forwardRef(function FeedCard({ project, isActive = true }, ref)
               {connected ? 'Sent' : 'Connect'}
             </span>
           </button>
-          {connectionError && <span className="max-w-16 text-center text-[10px] text-orange">{connectionError}</span>}
+          {(connectionError || engagementError) && (
+            <span className="max-w-16 text-center text-[10px] text-orange">
+              {connectionError || engagementError}
+            </span>
+          )}
 
           <button
             type="button"

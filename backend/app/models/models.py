@@ -126,6 +126,8 @@ class Project(db.Model):
         "ProjectMember", back_populates="project", cascade="all, delete-orphan"
     )
     tech_tags = db.relationship("TechTag", secondary=project_tech_tags)
+    likes = db.relationship("ProjectLike", back_populates="project", cascade="all, delete-orphan")
+    tips = db.relationship("ProjectTip", back_populates="project", cascade="all, delete-orphan")
 
     @property
     def owner_membership(self):
@@ -136,7 +138,7 @@ class Project(db.Model):
         membership = self.owner_membership
         return membership.user_id if membership else None
 
-    def to_dict(self, detailed=False):
+    def to_dict(self, detailed=False, current_user=None):
         owner = self.owner_membership
         data = {
             "id": self.id,
@@ -153,10 +155,43 @@ class Project(db.Model):
             "members": [m.user.to_dict() for m in self.members],
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
+            "like_count": len(self.likes),
+            "tip_count": len(self.tips),
+            "liked_by_me": bool(current_user and any(l.user_id == current_user.id for l in self.likes)),
         }
         if detailed:
             data["full_description"] = self.full_description
         return data
+
+
+class ProjectLike(db.Model):
+    __tablename__ = "project_likes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey("projects.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    project = db.relationship("Project", back_populates="likes")
+    user = db.relationship("User")
+
+    __table_args__ = (
+        db.UniqueConstraint("project_id", "user_id", name="uq_project_like"),
+    )
+
+
+class ProjectTip(db.Model):
+    """A symbolic 'thanks' gesture -- no real payment involved."""
+
+    __tablename__ = "project_tips"
+
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey("projects.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    project = db.relationship("Project", back_populates="tips")
+    user = db.relationship("User")
 
 
 class ProjectMember(db.Model):

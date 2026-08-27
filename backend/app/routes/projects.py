@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.extensions import db
-from app.models import Project, ProjectMember, Category, Cohort, TechTag, User
-from app.utils.decorators import require_owner, get_current_user
+from app.models import Project, ProjectMember, ProjectLike, ProjectTip, Category, Cohort, TechTag, User
+from app.utils.decorators import require_owner, get_current_user, get_current_user_optional
 
 bp = Blueprint("projects", __name__, url_prefix="/api/projects")
 
@@ -73,7 +73,10 @@ def list_projects():
         )
 
     projects = query.order_by(Project.created_at.desc()).all()
-    return jsonify({"success": True, "projects": [p.to_dict() for p in projects]})
+    current_user = get_current_user_optional()
+    return jsonify(
+        {"success": True, "projects": [p.to_dict(current_user=current_user) for p in projects]}
+    )
 
 
 @bp.post("")
@@ -113,7 +116,7 @@ def create_project():
     )
     db.session.commit()
 
-    return jsonify({"success": True, "project": project.to_dict(detailed=True)}), 201
+    return jsonify({"success": True, "project": project.to_dict(detailed=True, current_user=current_user)}), 201
 
 
 @bp.get("/<int:project_id>")
@@ -121,7 +124,10 @@ def get_project(project_id):
     project = db.session.get(Project, project_id)
     if not project:
         return jsonify({"success": False, "error": "Project not found"}), 404
-    return jsonify({"success": True, "project": project.to_dict(detailed=True)})
+    current_user = get_current_user_optional()
+    return jsonify(
+        {"success": True, "project": project.to_dict(detailed=True, current_user=current_user)}
+    )
 
 
 @bp.patch("/<int:project_id>")
@@ -186,3 +192,37 @@ def add_member(project_id):
     )
     db.session.commit()
     return jsonify({"success": True, "project": project.to_dict(detailed=True)}), 201
+
+
+@bp.post("/<int:project_id>/like")
+def toggle_like(project_id):
+    current_user = get_current_user()
+    project = db.session.get(Project, project_id)
+    if not project:
+        return jsonify({"success": False, "error": "Project not found"}), 404
+
+    existing = ProjectLike.query.filter_by(project_id=project_id, user_id=current_user.id).first()
+    if existing:
+        db.session.delete(existing)
+        liked = False
+    else:
+        db.session.add(ProjectLike(project_id=project_id, user_id=current_user.id))
+        liked = True
+
+    db.session.commit()
+    like_count = ProjectLike.query.filter_by(project_id=project_id).count()
+    return jsonify({"success": True, "liked": liked, "like_count": like_count})
+
+
+@bp.post("/<int:project_id>/tip")
+def add_tip(project_id):
+    """Records a symbolic 'thanks' -- no real payment is involved."""
+    current_user = get_current_user()
+    project = db.session.get(Project, project_id)
+    if not project:
+        return jsonify({"success": False, "error": "Project not found"}), 404
+
+    db.session.add(ProjectTip(project_id=project_id, user_id=current_user.id))
+    db.session.commit()
+    tip_count = ProjectTip.query.filter_by(project_id=project_id).count()
+    return jsonify({"success": True, "tip_count": tip_count})

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, useNavigate, Link, Navigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { ExternalLink, Code2, Heart, HandCoins, Handshake, Check } from 'lucide-react'
 import MediaBackground from '../components/MediaBackground.jsx'
@@ -8,16 +8,21 @@ import Avatar from '../components/Avatar.jsx'
 import Button from '../components/Button.jsx'
 import {
   selectAllProjects,
-  projectLikeToggled,
-  projectTipped,
+  toggleProjectLike,
+  tipProject,
 } from '../features/projects/projectsSlice.js'
+import { selectAuthToken } from '../features/auth/authSlice.js'
+import { api } from '../api/client.js'
 
 export default function ProjectDetail() {
   const { id } = useParams()
   const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const token = useSelector(selectAuthToken)
   const projects = useSelector(selectAllProjects)
   const project = projects.find((p) => p.id === id)
   const [connected, setConnected] = useState(false)
+  const [connectionError, setConnectionError] = useState('')
   const [tipped, setTipped] = useState(false)
 
   if (!project) {
@@ -26,6 +31,33 @@ export default function ProjectDetail() {
 
   const allContributors = [project.owner, ...project.members.filter((m) => m.id !== project.owner.id)]
 
+  const requireLogin = () => {
+    navigate('/login')
+  }
+
+  const handleLike = () => {
+    if (!token) return requireLogin()
+    dispatch(toggleProjectLike(project.id))
+  }
+
+  const handleTip = () => {
+    if (!token) return requireLogin()
+    dispatch(tipProject(project.id))
+    setTipped(true)
+    setTimeout(() => setTipped(false), 1200)
+  }
+
+  const handleConnect = async () => {
+    if (!token) return requireLogin()
+    try {
+      await api.post('/api/connections', { recipient_id: Number(project.owner.id) }, { token })
+      setConnected(true)
+      setConnectionError('')
+    } catch (err) {
+      setConnectionError(err.data?.error || 'Could not send request')
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6 lg:pb-10 lg:pt-10">
       <div className="mb-3 flex items-center justify-between">
@@ -33,7 +65,7 @@ export default function ProjectDetail() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => dispatch(projectLikeToggled(project.id))}
+            onClick={handleLike}
             className="flex items-center gap-1.5 rounded-full border-[1.5px] border-navy/70 px-3 py-1.5"
           >
             <Heart
@@ -45,11 +77,7 @@ export default function ProjectDetail() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              dispatch(projectTipped(project.id))
-              setTipped(true)
-              setTimeout(() => setTipped(false), 1200)
-            }}
+            onClick={handleTip}
             className="flex items-center gap-1.5 rounded-full border-[1.5px] border-navy/70 px-3 py-1.5"
             aria-label="Tip this build"
           >
@@ -127,11 +155,12 @@ export default function ProjectDetail() {
             Request sent to {project.owner.name}
           </p>
         ) : (
-          <Button variant="primary" onClick={() => setConnected(true)}>
+          <Button variant="primary" onClick={handleConnect}>
             <Handshake size={15} strokeWidth={1.75} />
             Connect
           </Button>
         )}
+        {connectionError && <p className="text-[13px] text-orange">{connectionError}</p>}
       </div>
     </div>
   )
