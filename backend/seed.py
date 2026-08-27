@@ -319,22 +319,43 @@ with app.app_context():
 
     db.session.commit()
 
+    def _avatar_url(email):
+        # Deterministic per-email random face photo -- same service the
+        # original frontend mock data used (i.pravatar.cc), so the "creator
+        # network" has real-looking profile photos instead of bare initials.
+        return f"https://i.pravatar.cc/300?u={email}"
+
     group6 = Cohort.query.filter_by(name=ADMIN_COHORT).first()
     admins_created = 0
+    avatars_added = 0
     for name, email in ADMINS:
-        if User.query.filter_by(email=email).first():
+        existing = User.query.filter_by(email=email).first()
+        if existing:
+            if not existing.avatar_url:
+                existing.avatar_url = _avatar_url(email)
+                avatars_added += 1
             continue
-        user = User(name=name, email=email, role="admin", cohort_id=group6.id if group6 else None)
+        user = User(
+            name=name, email=email, role="admin",
+            cohort_id=group6.id if group6 else None, avatar_url=_avatar_url(email),
+        )
         user.set_password(ADMIN_PASSWORD)
         db.session.add(user)
         admins_created += 1
 
     users_created = 0
     for name, email, cohort_name, bio in DEMO_USERS:
-        if User.query.filter_by(email=email).first():
+        existing = User.query.filter_by(email=email).first()
+        if existing:
+            if not existing.avatar_url:
+                existing.avatar_url = _avatar_url(email)
+                avatars_added += 1
             continue
         cohort = Cohort.query.filter_by(name=cohort_name).first()
-        user = User(name=name, email=email, role="student", cohort_id=cohort.id if cohort else None, bio=bio)
+        user = User(
+            name=name, email=email, role="student", cohort_id=cohort.id if cohort else None,
+            bio=bio, avatar_url=_avatar_url(email),
+        )
         user.set_password(DEMO_PASSWORD)
         db.session.add(user)
         users_created += 1
@@ -429,6 +450,7 @@ with app.app_context():
     db.session.commit()
     print(f"Seeded {Cohort.query.count()} cohorts, {Category.query.count()} categories, "
           f"{TechTag.query.count()} tech tags, {admins_created} new admin account(s), "
-          f"{users_created} new demo user(s), {projects_created} new demo project(s) "
+          f"{users_created} new demo user(s) ({avatars_added} avatar(s) backfilled), "
+          f"{projects_created} new demo project(s) "
           f"({projects_updated} updated, {projects_removed} removed), "
           f"{code_clinic_posts_created} new Code Clinic post(s).")
