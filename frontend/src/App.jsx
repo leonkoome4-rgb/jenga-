@@ -23,12 +23,7 @@ import PostSos from './pages/PostSos.jsx'
 import NotFound from './pages/NotFound.jsx'
 import AIAssistant from './components/assistant/AIAssistant.jsx'
 import RequireAdmin from './components/RequireAdmin.jsx'
-import {
-  selectAuthToken,
-  selectAuthUser,
-  fetchCurrentUser,
-  LOCAL_SESSION_TOKEN,
-} from './features/auth/authSlice.js'
+import { selectAuthToken, selectAuthUser, fetchCurrentUser } from './features/auth/authSlice.js'
 import { fetchProjects } from './features/projects/projectsSlice.js'
 
 function App() {
@@ -38,10 +33,9 @@ function App() {
 
   // Resolve the real logged-in identity once at the root, so role-gated UI
   // (admin link, profile, AI Hub) is correct everywhere from first paint
-  // instead of each page having to trigger its own fetch. A local demo
-  // session has no backend to fetch from -- its user is already in state.
+  // instead of each page having to trigger its own fetch.
   useEffect(() => {
-    if (token && token !== LOCAL_SESSION_TOKEN && !authUser) {
+    if (token && !authUser) {
       dispatch(fetchCurrentUser())
     }
   }, [token, authUser, dispatch])

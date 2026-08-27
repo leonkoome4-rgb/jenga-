@@ -11,8 +11,6 @@ import {
   selectAuthStatus,
   selectAuthError,
   authErrorCleared,
-  findDemoAdmin,
-  localAdminLoggedIn,
 } from '../features/auth/authSlice.js'
 
 const inputClasses =
@@ -27,7 +25,6 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const demoAdmin = findDemoAdmin(email, password)
   const googleConfigured = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID)
 
   const handleSubmit = async (e) => {
@@ -38,16 +35,6 @@ export default function Login() {
 
     if (loginUser.fulfilled.match(result)) {
       navigate('/ai-hub')
-      return
-    }
-
-    // Only fall back to the local demo session when there's genuinely no
-    // backend to talk to (e.g. this is the frontend-only deployed preview).
-    // A real backend must always win so real accounts get a real token --
-    // otherwise AI Hub calls would carry a fake token and get rejected.
-    if (result.payload?.status === 0 && demoAdmin) {
-      dispatch(localAdminLoggedIn(demoAdmin))
-      navigate('/discover')
     }
   }
 
