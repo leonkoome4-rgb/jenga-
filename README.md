@@ -63,9 +63,32 @@ project regardless of ownership.
 
 ### AI Hub
 
-7 features (categorize, description, tags, skill-gap, team-match, README, debug),
-all sharing one `call_ai()` core in `app/services/ai_service.py`, via Groq's
-OpenAI-compatible API. Every route requires a valid JWT and logs to `AI_HISTORY`.
+7 features (categorize, description, tags, skill-gap, team-match, README, debug)
+plus a floating assistant chat, all sharing one `call_ai()` core in
+`app/services/ai_service.py`, via Groq's OpenAI-compatible API. None of it
+requires an account — a JWT is optional and only used to personalize
+responses and attribute `AI_HISTORY` when present. Since there's no login to
+hold accountable for volume, every `/api/ai/*` route is rate-limited by IP
+(40 requests / 10 minutes, `app/utils/rate_limit.py`).
+
+### Help (problem-solving)
+
+Anyone can browse `/help`; posting a problem (text, or a video/image URL) and
+commenting both require login (`app/routes/help.py`, `HelpPost`/`HelpComment`
+models). The original poster can mark their own post resolved.
+
+### Google Sign-In
+
+`POST /api/auth/google` verifies a Google Identity Services ID token
+server-side (`app/services/google_auth_service.py`) and creates or reuses an
+account by email — no password involved, and Google's own flow already
+handles bot protection so this skips the CAPTCHA check. Needs an OAuth 2.0
+Client ID (type: Web application) from
+https://console.cloud.google.com/apis/credentials, with your dev and
+production origins listed under "Authorized JavaScript origins". Set
+`GOOGLE_CLIENT_ID` in `backend/.env` and the same value as
+`VITE_GOOGLE_CLIENT_ID` in `frontend/.env` — there's no client secret in this
+flow. The "Continue with Google" button hides itself until both are set.
 
 ### CAPTCHA (Cloudflare Turnstile)
 
@@ -171,4 +194,5 @@ URL.
 - **Profile** (`/profile`, `/creators/:id`) — a student's builds, stats, and skills
 - **Add project** (`/add-project`) — publish a build with image/video, tech stack, team
 - **AI Hub** (`/ai-hub`) — categorize, describe, tag, skill-gap, team-match, README, debug
+- **Help** (`/help`, `/help/new`, `/help/:id`) — post a problem (text/video/image) and get help from other builders
 - **Admin** (`/admin`, `/admin/cohorts`) — manage projects and cohorts

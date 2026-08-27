@@ -35,6 +35,7 @@ def create_app(config_object="app.config.Config"):
         connections,
         ai,
         admin,
+        help as help_routes,
     )
 
     app.register_blueprint(auth.bp)
@@ -45,6 +46,7 @@ def create_app(config_object="app.config.Config"):
     app.register_blueprint(connections.bp)
     app.register_blueprint(ai.bp)
     app.register_blueprint(admin.bp)
+    app.register_blueprint(help_routes.bp)
 
     @jwt.unauthorized_loader
     def unauthorized(reason):

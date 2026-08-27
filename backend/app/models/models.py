@@ -217,6 +217,59 @@ class AIHistory(db.Model):
         }
 
 
+class HelpPost(db.Model):
+    __tablename__ = "help_posts"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    question = db.Column(db.Text, nullable=False)
+    media_type = db.Column(db.String(10), nullable=False, default="none")  # video | image | none
+    media_url = db.Column(db.String(500), nullable=True)
+    resolved = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    user = db.relationship("User")
+    comments = db.relationship(
+        "HelpComment", back_populates="post", cascade="all, delete-orphan", order_by="HelpComment.created_at"
+    )
+
+    def to_dict(self, detailed=False):
+        data = {
+            "id": self.id,
+            "question": self.question,
+            "media_type": self.media_type,
+            "media_url": self.media_url,
+            "resolved": self.resolved,
+            "author": self.user.to_dict() if self.user else None,
+            "comment_count": len(self.comments),
+            "created_at": self.created_at.isoformat(),
+        }
+        if detailed:
+            data["comments"] = [c.to_dict() for c in self.comments]
+        return data
+
+
+class HelpComment(db.Model):
+    __tablename__ = "help_comments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    help_post_id = db.Column(db.Integer, db.ForeignKey("help_posts.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+
+    post = db.relationship("HelpPost", back_populates="comments")
+    user = db.relationship("User")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "body": self.body,
+            "author": self.user.to_dict() if self.user else None,
+            "created_at": self.created_at.isoformat(),
+        }
+
+
 class PasswordResetToken(db.Model):
     __tablename__ = "password_reset_tokens"
 

@@ -17,6 +17,9 @@ import Register from './pages/Register.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
 import AIHub from './pages/AIHub.jsx'
+import HelpFeed from './pages/HelpFeed.jsx'
+import HelpPostDetail from './pages/HelpPostDetail.jsx'
+import AskForHelp from './pages/AskForHelp.jsx'
 import NotFound from './pages/NotFound.jsx'
 import AIAssistant from './components/assistant/AIAssistant.jsx'
 import RequireAdmin from './components/RequireAdmin.jsx'
@@ -62,6 +65,9 @@ function App() {
           <Route path="/top" element={<TopRated />} />
           <Route path="/inbox" element={<Inbox />} />
           <Route path="/ai-hub" element={<AIHub />} />
+          <Route path="/help" element={<HelpFeed />} />
+          <Route path="/help/new" element={<AskForHelp />} />
+          <Route path="/help/:id" element={<HelpPostDetail />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/creators/:id" element={<Profile />} />
