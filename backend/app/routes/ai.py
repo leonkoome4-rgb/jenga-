@@ -29,6 +29,8 @@ ASSISTANT_ROUTES = {
     "/top": "Leaderboard -- top-liked projects",
     "/inbox": "Inbox -- connection requests and messages",
     "/ai-hub": "AI Hub -- categorize, describe, tag, skill-gap, team-match, README, debug tools",
+    "/help": "Help -- post a problem (text/video/image) and get help from other builders",
+    "/help/new": "Form to post a new problem for help",
     "/profile": "The signed-in user's own profile",
     "/add-project": "Form to publish a new project",
     "/login": "Log in page",
