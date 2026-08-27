@@ -14,6 +14,8 @@ TECH_TAGS = [
     "React", "Flask", "PostgreSQL", "Kotlin", "Android", "Firebase", "TypeScript",
     "Figma", "Python", "Pandas", "Node.js", "Express", "MongoDB", "React Native",
     "TensorFlow", "JavaScript", "Framer Motion", "Canvas API",
+    "Prisma", "SQLite", "Chart.js", "Tailwind CSS", "Twilio", "Claude API",
+    "Puppeteer", "Next.js", "Daraja API", "JWT",
 ]
 
 # Known admin accounts for this cohort group. Shared password is intentional
@@ -133,6 +135,82 @@ DEMO_PROJECTS = [
         category="Web Dev", cohort="Cohort 12", tech=["React", "TypeScript"],
     ),
 ]
+
+# Leon Koome's real, shipped projects -- real descriptions, tech stacks, and
+# preview clips (frontend/public/leon-projects/), not placeholder content.
+LEON_PROJECTS = [
+    dict(
+        name="Workforce Status & Payroll Console", owner="Leon Koome", members=["Leon Koome"],
+        description="Full-stack internal HR and payroll system for a transport company -- employee lifecycle, daily status tracking, AES-256 encrypted bank details, leave management, and a compliance-grade audit log.",
+        full_description="Full-stack internal HR and payroll system for a transport company -- employee lifecycle, daily status tracking, AES-256 encrypted bank details, leave management, and a compliance-grade audit log.",
+        image_url=None,
+        video_url="/leon-projects/hris-preview.mp4",
+        live_link=None,
+        category="Web Dev", cohort="Group 6",
+        tech=["Node.js", "Express", "Prisma", "SQLite", "Chart.js", "Tailwind CSS"],
+    ),
+    dict(
+        name="WhatsApp Creative Agency", owner="Leon Koome", members=["Leon Koome"],
+        description="A WhatsApp bot that turns a text conversation into a finished job -- classifies each message, drafts a poster or freelancer quote via Claude, and routes approvals through Twilio.",
+        full_description="A WhatsApp bot that turns a text conversation into a finished job. One webhook classifies each message as a simple poster request or a complex brief, drafts a Puppeteer-rendered poster or a freelancer quote via Claude, and routes approvals and freelancer notifications through Twilio -- all state lives in SQLite via Prisma. Currently runs against a local ngrok tunnel, not yet on a public server.",
+        image_url=None,
+        video_url="/leon-projects/whatsapp-agency-preview.mp4",
+        live_link=None,
+        category="Web Dev", cohort="Group 6",
+        tech=["Node.js", "Twilio", "Claude API", "Puppeteer", "Prisma", "SQLite"],
+    ),
+    dict(
+        name="Super Metro -- Transport Website", owner="Leon Koome", members=["Leon Koome"],
+        description="Full marketing and service site for Super Metro, a Nairobi bus SACCO with 500+ vehicles -- scroll-driven animations, live route maps, airport shuttle booking, and an incident-report flow.",
+        full_description="Full marketing and service site for Super Metro, a Nairobi bus SACCO with 500+ vehicles. Includes scroll-driven animations, live route maps, airport shuttle booking, and an incident-report flow.",
+        image_url=None,
+        video_url=None,
+        live_link="https://super-metro-gb9k.vercel.app",
+        category="Web Dev", cohort="Group 6",
+        tech=["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion"],
+    ),
+    dict(
+        name="Super Metro Insurance Agency", owner="Leon Koome", members=["Leon Koome"],
+        description="Full-stack insurance agency site covering all 9 insurance classes with a 6-step motor quote wizard, real IRA-standard premium calculations, and M-Pesa Daraja STK Push payments.",
+        full_description="Full-stack insurance agency site covering all 9 insurance classes with a 6-step motor quote wizard, real IRA-standard premium calculations, and Safaricom Daraja M-Pesa STK Push payments.",
+        image_url=None,
+        video_url=None,
+        live_link="https://insuarance-tau.vercel.app",
+        category="Web Dev", cohort="Group 6",
+        tech=["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "Daraja API"],
+    ),
+    dict(
+        name="Kikapu -- Group-Fund Platform for Chamas", owner="Leon Koome", members=["Leon Koome"],
+        description="Full-stack platform for Kenyan chamas, emergency funds, weddings, and harambees -- six fund types on one flexible schema, M-Pesa contributions, and admin-approved member claims. Built with a 4-person team.",
+        full_description="Full-stack platform for Kenyan chamas, emergency funds, weddings, matanga contributions, and harambees -- six fund types on one flexible schema, M-Pesa Daraja STK Push contributions, member claims with admin approval, and pluggable SMS/email notifications. Built with a 4-person team.",
+        image_url=None,
+        video_url="/leon-projects/kikapu-preview.mp4",
+        live_link="https://kikapu-kappa.vercel.app",
+        category="Web Dev", cohort="Group 6",
+        tech=["React", "Flask", "PostgreSQL", "JWT", "Daraja API", "Tailwind CSS"],
+    ),
+    dict(
+        name="Report It -- Anonymous Misconduct Reporting", owner="Leon Koome", members=["Leon Koome"],
+        description="Anonymous reporting tool for organizations. Reporters get a one-time case code as their only credential, ever -- no accounts, no names. Evidence is stripped of metadata before storage.",
+        full_description="Anonymous reporting tool for organizations. Reporters get a one-time case code as their only credential, ever -- no accounts, no names. Evidence uploads are stripped of metadata before storage, with a token-gated admin dashboard for compliance to triage and respond. Runs in a self-contained demo mode.",
+        image_url=None,
+        video_url="/leon-projects/reportit-preview.mp4",
+        live_link="https://frontend-jet-alpha-59.vercel.app",
+        category="Web Dev", cohort="Group 6",
+        tech=["Next.js", "TypeScript", "Tailwind CSS"],
+    ),
+    dict(
+        name="RentTrack -- Payment-Collection Tracker", owner="Leon Koome", members=["Leon Koome"],
+        description="A live board for anyone who regularly collects money from a group -- landlords, schools, chamas. Payers log in with just a phone number and pay via M-Pesa STK Push.",
+        full_description="A live board for anyone who regularly collects money from a group -- landlords, schools, chamas. Payers log in with just a phone number and pay via M-Pesa STK Push; admins get a color-coded board, request payments, log cash/bank manually, and drill into any payer's history. One flexible Groups model covers rentals, school fees, chamas, and more, and overpayments cascade forward to cover future periods automatically.",
+        image_url=None,
+        video_url="/leon-projects/renttrack-preview.mp4",
+        live_link="https://rent-psi-roan.vercel.app/login",
+        category="Web Dev", cohort="Group 6",
+        tech=["React", "Node.js", "Express", "PostgreSQL", "Prisma", "Daraja API"],
+    ),
+]
+DEMO_PROJECTS += LEON_PROJECTS
 
 # Real-life problems students actually hit, so /code-clinic has something worth
 # browsing on day one instead of an empty feed.
@@ -293,6 +371,8 @@ with app.app_context():
             full_description=p["full_description"],
             image_url=p["image_url"],
             video_url=p["video_url"],
+            github_link=p.get("github_link"),
+            live_link=p.get("live_link"),
             category_id=category.id if category else None,
             cohort_id=cohort.id if cohort else None,
         )
