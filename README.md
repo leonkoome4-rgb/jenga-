@@ -184,7 +184,7 @@ PostgreSQL data is stored in the `postgres_data` volume. If you deploy the
 frontend to Vercel instead of using the container's frontend, deploy just the
 backend + PostgreSQL from this stack, set `VITE_API_URL` in Vercel to that
 backend's public URL, and set `FRONTEND_ORIGIN` on the backend to the Vercel
-URL.
+URL..
 
 ## Screens
 
